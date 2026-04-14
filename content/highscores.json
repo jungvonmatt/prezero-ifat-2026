@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "name": "TestUser",
+      "score": 88.8,
+      "createdAt": "2026-04-09T13:33:34.738Z"
+    },
+    {
+      "name": "Steffi",
+      "score": 81.81,
+      "createdAt": "2026-04-14T12:30:11.675Z"
+    },
+    {
+      "name": "Steffi",
+      "score": 74.01,
+      "createdAt": "2026-04-09T13:37:09.941Z"
+    },
+    {
+      "name": "z",
+      "score": 39.92,
+      "createdAt": "2026-04-14T12:36:17.987Z"
+    }
+  ]
+}
