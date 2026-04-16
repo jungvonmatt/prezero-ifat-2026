@@ -1,14 +1,44 @@
 {
   "entries": [
     {
+      "name": "s",
+      "score": 90.4,
+      "createdAt": "2026-04-16T14:40:20.447Z"
+    },
+    {
       "name": "TestUser",
       "score": 88.8,
       "createdAt": "2026-04-09T13:33:34.738Z"
     },
     {
+      "name": "y",
+      "score": 88.7,
+      "createdAt": "2026-04-16T14:33:26.609Z"
+    },
+    {
+      "name": "s",
+      "score": 86.4,
+      "createdAt": "2026-04-16T14:40:27.163Z"
+    },
+    {
+      "name": "s",
+      "score": 86.25,
+      "createdAt": "2026-04-16T14:40:35.169Z"
+    },
+    {
+      "name": "x",
+      "score": 83.74,
+      "createdAt": "2026-04-16T14:33:20.371Z"
+    },
+    {
       "name": "Steffi",
       "score": 81.81,
       "createdAt": "2026-04-14T12:30:11.675Z"
+    },
+    {
+      "name": "z",
+      "score": 80.66,
+      "createdAt": "2026-04-16T14:33:35.076Z"
     },
     {
       "name": "Steffi",

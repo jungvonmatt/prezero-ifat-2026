@@ -9,35 +9,35 @@
             <button class="btn" @click="startGame">Los geht's!</button>
           </div>
         </Transition>
-        <Transition name="timer">
+        <!-- <Transition name="timer">
           <div v-if="isDrawing && !result" class="timer-overlay" :class="{ warning: roundTimeLeftMs <= 3000 }">
             <svg class="timer-ring" viewBox="0 0 100 100" aria-hidden="true">
               <circle class="timer-ring-track" cx="50" cy="50" r="42" />
               <circle class="timer-ring-progress" cx="50" cy="50" r="42" :style="{ strokeDashoffset: timerDashoffset }" />
             </svg>
             <div class="timer-overlay-content">
-              <strong>{{ timerText }}</strong>
-              <span class="live-score">{{ liveScoreText }}</span>
+              <strong class="timer-caption">{{ timerText }}</strong>
             </div>
           </div>
-        </Transition>
+        </Transition> -->
+        <strong v-if="isDrawing || result" class="score-display">{{ scoreDisplayText }}</strong>
         <div v-if="result" class="controls">
-          <button class="btn" @click="resetRound">Neustart</button>
+          <!-- <span class="controls-label">{{ result.label }}</span> -->
+          <!-- <button class="btn" @click="resetRound">Neustart</button> -->
         </div>
       </div>
     </section>
 
     <aside class="sidebar">
-      
-      <section class="hero card">
+      <!-- <section class="hero">
         <div class="stats">
           <strong>{{ scoreText }}%</strong>
           <span v-if="result">{{ result.label }}</span>
           <span v-else class="muted">Round not finished yet</span>
         </div>
-      </section>
+      </section> -->
 
-      <article class="card board">
+      <!-- <article>
         <h2>Save your score</h2>
         <form class="save-form" @submit.prevent="saveScore">
           <input v-model="playerName" placeholder="Your name" maxlength="24" :disabled="!result || isSaving" />
@@ -45,24 +45,26 @@
             {{ isSaving ? "Saving..." : "Save score" }}
           </button>
         </form>
-      </article>
+      </article> -->
 
-      <article class="card board top-scores">
-        <div class="top-scores-header">
+      <article>
+        <div class="highscore-header">
           <h2>Scores</h2>
           <span v-if="isLocalMode" class="local-badge">Lokal gespeichert</span>
         </div>
         <div v-if="highscores.length" class="highscore-list-wrap">
           <ol class="highscore-list">
             <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
-              <span>{{ index + 1 }}.</span>
-              <strong>{{ entry.name }}</strong>
-              <em>{{ entry.score.toFixed(2) }}%</em>
+              <span>#{{ index + 1 }}</span>
+              <!-- <strong>{{ entry.name }}</strong> -->
+              <span>{{ entry.score.toFixed(1) }}%</span>
             </li>
           </ol>
         </div>
         <p v-else class="muted">No highscores yet.</p>
       </article>
+
+      <button v-if="result" class="btn restart" @click="resetRound">Neustart</button>
     </aside>
   </div>
 </template>
@@ -112,6 +114,8 @@ const SCORE_WEIGHT_RADIAL = 0.2;
 const SCORE_WEIGHT_CLOSURE = 0.1;
 const DIRECTION_MIN_SEGMENT = 1;
 const DIRECTION_MIN_ANGLE_DELTA = 0.02;
+const DIRECTION_MIN_ANGLE_DELTA_FLOOR = 0.0012;
+const DIRECTION_MIN_ANGLE_DELTA_RATIO = 0.35;
 const DIRECTION_MIN_CENTER_DISTANCE_FACTOR = 0.12;
 const DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1;
 const ENABLE_SCORE_DEBUG = import.meta.dev;
@@ -166,16 +170,21 @@ const scoreText = computed(() => {
   if (!result.value) {
     return "0";
   }
-  return result.value.score.toFixed(2);
+  return result.value.score.toFixed(1);
 });
 const timerProgress = computed(() => clamp(roundTimeLeftMs.value / ROUND_TIMEOUT_MS, 0, 1));
 const timerDashoffset = computed(() => String(TIMER_RING_CIRCUMFERENCE * (1 - timerProgress.value)));
 const timerText = computed(() => `${(roundTimeLeftMs.value / 1000).toFixed(1)}s`);
-const liveScoreText = computed(() => {
-  if (!isDrawing.value || result.value) return "";
+const scoreDisplayText = computed(() => {
+  if (result.value) {
+    return `${result.value.score.toFixed(1)}%`;
+  }
+
+  if (!isDrawing.value) return "";
+
   const liveScore = calculateLiveScore(points.value);
-  if (liveScore === null) return "Score --";
-  return `Score ${liveScore.toFixed(1)}%`;
+  if (liveScore === null) return "--";
+  return `${liveScore.toFixed(1)}%`;
 });
 
 function getLabel(score: number) {
@@ -414,7 +423,7 @@ function calculateLiveScore(rawStrokePoints: StrokePoint[]): number | null {
   const closureWeight = SCORE_WEIGHT_CLOSURE * coverageProgress * coverageProgress;
 
   // Motivational live score: start high when trajectory is clean, then decay with deviations.
-  const liveError = clamp(radiusFitError * 0.62 + radialError * 0.30 + closureError * closureWeight, 0, 1);
+  const liveError = clamp(radiusFitError * 0.62 + radialError * 0.3 + closureError * closureWeight, 0, 1);
   const liveScore = Math.pow(1 - liveError, 0.72) * 100;
 
   return clamp(liveScore, 0, 100);
@@ -517,8 +526,14 @@ function moveRound(event: PointerEvent) {
           const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
           const currentAngle = Math.atan2(point.y - guideCenterY, point.x - guideCenterX);
           const angleDelta = normalizeAngleDelta(currentAngle - prevAngle);
+          const averageDistanceToCenter = (prevDistanceToCenter + currentDistanceToCenter) / 2;
 
-          if (Math.abs(angleDelta) >= DIRECTION_MIN_ANGLE_DELTA) {
+          // Angular movement around canvas center is approximately segmentLength / radius.
+          const expectedAngleDelta = segmentLength / Math.max(averageDistanceToCenter, 0.0001);
+          const adaptiveMinAngleDelta = expectedAngleDelta * DIRECTION_MIN_ANGLE_DELTA_RATIO;
+          const minAngleDelta = clamp(adaptiveMinAngleDelta, DIRECTION_MIN_ANGLE_DELTA_FLOOR, DIRECTION_MIN_ANGLE_DELTA);
+
+          if (Math.abs(angleDelta) >= minAngleDelta) {
             const nextDirection: -1 | 1 = angleDelta > 0 ? 1 : -1;
 
             if (rotationDirection.value === 0) {
@@ -545,9 +560,9 @@ function moveRound(event: PointerEvent) {
 }
 
 function evaluateRound() {
-  const rawPoints = getScoringPoints(points.value);
+  const score = calculateLiveScore(points.value);
 
-  if (rawPoints.length < 25) {
+  if (score === null) {
     result.value = {
       score: 0,
       label: "Draw a full circle for a score",
@@ -563,143 +578,26 @@ function evaluateRound() {
     };
     return;
   }
-
-  const center = rawPoints.reduce((acc, p) => ({ x: acc.x + p.x / rawPoints.length, y: acc.y + p.y / rawPoints.length }), { x: 0, y: 0 });
-  const guideCenterX = logicalSize / 2;
-  const guideCenterY = logicalSize / 2;
-  const targetRadius = logicalSize * GUIDE_RADIUS_FACTOR;
-  const distances = rawPoints.map((p) => Math.hypot(p.x - center.x, p.y - center.y));
-  const avgRadius = distances.reduce((a, v) => a + v, 0) / distances.length;
-  const centerOffset = Math.hypot(center.x - guideCenterX, center.y - guideCenterY);
-  const centerError = centerOffset / Math.max(targetRadius, 0.0001);
-  const guideCenterOutsideStroke = centerOffset > avgRadius * CENTER_OUTSIDE_STROKE_MARGIN;
-
-  if (centerError > CENTER_ERROR_THRESHOLD || guideCenterOutsideStroke) {
-    result.value = {
-      score: 0,
-      label: "Center miss: keep the guide center inside your circle",
-      radialError: 1,
-      radiusFitError: 1,
-      closureError: 1,
-      directionChangeError: 0,
-      timeoutError: 0,
-      centerFailureError: 1,
-      guideSizeFailureError: 0,
-      coverageFailureError: 0,
-      coverageDegrees: 0,
-    };
-    return;
-  }
-
-  let signedCoverage = 0;
-  for (let i = 1; i < rawPoints.length; i += 1) {
-    const prev = rawPoints[i - 1];
-    const current = rawPoints[i];
-    if (!prev || !current) continue;
-
-    const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
-    const currentAngle = Math.atan2(current.y - guideCenterY, current.x - guideCenterX);
-    signedCoverage += normalizeAngleDelta(currentAngle - prevAngle);
-  }
-
-  const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
-
-  if (coverageDegrees < MIN_COVERAGE_DEGREES) {
-    result.value = {
-      score: 0,
-      label: "Incomplete arc: draw almost a full circle",
-      radialError: 1,
-      radiusFitError: 1,
-      closureError: 1,
-      directionChangeError: 0,
-      timeoutError: 0,
-      centerFailureError: 0,
-      guideSizeFailureError: 0,
-      coverageFailureError: 1,
-      coverageDegrees,
-    };
-    return;
-  }
-  const radiusRatio = avgRadius / Math.max(targetRadius, 0.0001);
-
-  const radiusFitError =
-    distances.reduce((acc, r) => {
-      return acc + Math.abs(r - targetRadius) / Math.max(targetRadius, 0.0001);
-    }, 0) / distances.length;
-  const radiusRatioError = Math.abs(radiusRatio - 1);
-  const radiusSizePenalty = Math.pow(clamp(radiusRatioError / RADIUS_SIZE_PENALTY_RANGE, 0, 1), RADIUS_SIZE_PENALTY_EXPONENT);
-
-  const variance =
-    distances.reduce((acc, r) => {
-      return acc + (r - avgRadius) ** 2;
-    }, 0) / distances.length;
-
-  const radialError = Math.sqrt(variance) / Math.max(avgRadius, 0.0001);
-  const first = rawPoints[0];
-  const last = rawPoints[rawPoints.length - 1];
-
-  if (!first || !last) {
-    result.value = {
-      score: 0,
-      label: "Draw a full circle for a score",
-      radialError: 1,
-      radiusFitError: 1,
-      closureError: 1,
-      directionChangeError: 0,
-      timeoutError: 0,
-      centerFailureError: 0,
-      guideSizeFailureError: 0,
-      coverageFailureError: 0,
-      coverageDegrees,
-    };
-    return;
-  }
-
-  const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
-  const closureError = closureGap / Math.max(targetRadius, 0.0001);
-
-  const combinedError = clamp(radiusFitError * SCORE_WEIGHT_RADIUS_FIT + radiusSizePenalty * SCORE_WEIGHT_RADIUS_SIZE + radialError * SCORE_WEIGHT_RADIAL + closureError * SCORE_WEIGHT_CLOSURE, 0, 1);
-  const score = clamp((1 - combinedError) * 100, 0, 100);
 
   if (ENABLE_SCORE_DEBUG) {
-    console.debug("circle-score-breakdown", {
+    console.debug("circle-score-live-final", {
       score,
-      combinedError,
-      radiusFitError,
-      radiusRatio,
-      radiusRatioError,
-      radiusSizePenalty,
-      radialError,
-      closureError,
-      coverageDegrees,
-      centerError,
-      thresholds: {
-        center: CENTER_ERROR_THRESHOLD,
-        radiusSizePenaltyRange: RADIUS_SIZE_PENALTY_RANGE,
-        radiusSizePenaltyExponent: RADIUS_SIZE_PENALTY_EXPONENT,
-        coverage: MIN_COVERAGE_DEGREES,
-      },
-      weights: {
-        radiusFit: SCORE_WEIGHT_RADIUS_FIT,
-        radiusSize: SCORE_WEIGHT_RADIUS_SIZE,
-        radial: SCORE_WEIGHT_RADIAL,
-        closure: SCORE_WEIGHT_CLOSURE,
-      },
+      note: "final-score uses calculateLiveScore()",
     });
   }
 
   result.value = {
     score,
     label: getLabel(score),
-    radialError,
-    radiusFitError,
-    closureError,
+    radialError: 0,
+    radiusFitError: 0,
+    closureError: 0,
     directionChangeError: 0,
     timeoutError: 0,
     centerFailureError: 0,
     guideSizeFailureError: 0,
     coverageFailureError: 0,
-    coverageDegrees,
+    coverageDegrees: 0,
   };
 }
 
@@ -831,13 +729,37 @@ onBeforeUnmount(() => {
 .controls {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: calc(50% + 64px);
   transform: translate(-50%, -50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
   z-index: 2;
+  text-align: center;
+}
+
+.score-display {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
+  color: #a5c814;
+  font-family: Goldman;
+  font-size: 100px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.controls-label {
+  max-width: 240px;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  color: color-mix(in srgb, #ffffff 88%, #{variables.$core-color-tertiary-base});
 }
 
 .intro-copy {
@@ -904,9 +826,14 @@ onBeforeUnmount(() => {
 }
 
 .timer-overlay strong {
-  font-size: 1.2rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.timer-caption {
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
 }
 
 .timer-overlay-content {
@@ -915,16 +842,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-}
-
-.live-score {
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, #{variables.$core-color-tertiary-base} 72%, #ffffff);
+  gap: 2px;
 }
 
 .timer-ring {
@@ -957,6 +875,8 @@ onBeforeUnmount(() => {
 .sidebar {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
   gap: 16px;
   min-height: 0;
   padding: 0;
@@ -986,11 +906,6 @@ onBeforeUnmount(() => {
   line-height: 1;
 }
 
-.board {
-  padding: 18px;
-  flex-shrink: 0;
-}
-
 .save-form {
   display: flex;
   gap: 10px;
@@ -1005,19 +920,14 @@ onBeforeUnmount(() => {
   font: inherit;
 }
 
-.top-scores {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-right: 6px;
+.highscore-header {
+  margin-top: -40px;
+  margin-bottom: 8px;;
 }
 
 .highscore-list-wrap {
   position: relative;
-  flex: 1;
-  min-height: 0;
+  height: 25dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1036,12 +946,12 @@ onBeforeUnmount(() => {
 
 .highscore-list-wrap::before {
   top: 0;
-  background: linear-gradient(to bottom, variables.$surface, transparent);
+  background: linear-gradient(to bottom, #{variables.$core-color-bg}, transparent);
 }
 
 .highscore-list-wrap::after {
   bottom: 0;
-  background: linear-gradient(to top, variables.$surface, transparent);
+  background: linear-gradient(to top, #{variables.$core-color-bg}, transparent);
 }
 
 .highscore-list {
@@ -1052,35 +962,46 @@ onBeforeUnmount(() => {
   height: 100%;
   overflow-y: scroll;
   min-height: 0;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: variables.$line transparent;
+  // Vorherige Variante (sichtbare Scrollbar):
+  // scrollbar-gutter: stable;
+  // scrollbar-width: thin;
+  // scrollbar-color: variables.$line transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .highscore-list::-webkit-scrollbar {
-  width: 6px;
+  // Vorherige Variante (sichtbare Scrollbar):
+  // width: 6px;
+  width: 0;
+  height: 0;
 }
 
-.highscore-list::-webkit-scrollbar-track {
-  background: transparent;
-}
+// .highscore-list::-webkit-scrollbar-track {
+//   background: transparent;
+// }
 
-.highscore-list::-webkit-scrollbar-thumb {
-  background: variables.$line;
-  border-radius: 999px;
-}
+// .highscore-list::-webkit-scrollbar-thumb {
+//   background: variables.$line;
+//   border-radius: 999px;
+// }
 
-.highscore-list::-webkit-scrollbar-thumb:hover {
-  background: variables.$muted;
-}
+// .highscore-list::-webkit-scrollbar-thumb:hover {
+//   background: variables.$muted;
+// }
 
 .highscore-list li {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  border-top: 1px solid variables.$line;
-  padding: 10px 0;
+  gap: 12px;
+
+  color: #fff;
+  font-family: Goldman;
+  font-size: 40px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
 }
 
 .highscore-list li:first-child {
@@ -1088,15 +1009,9 @@ onBeforeUnmount(() => {
   padding-top: 0;
 }
 
-.highscore-list em {
-  font-style: normal;
-  font-weight: 600;
-}
-
-.top-scores-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.restart {
+  position: absolute;
+  bottom: 48px;
 }
 
 .local-badge {
@@ -1118,6 +1033,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 860px) {
   .game-grid {
+    position: relative;
     grid-template-columns: 1fr;
     overflow-y: auto;
     flex: none;
