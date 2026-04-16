@@ -89,3 +89,7 @@ Example:
 ```bash
 NUXT_PUBLIC_STROKE_MODE=cinematic npm run dev
 ```
+
+## Scoring Documentation
+
+Detailed documentation for drawing, error handling, and score tuning is available in [docs/score-logic.md](docs/score-logic.md).

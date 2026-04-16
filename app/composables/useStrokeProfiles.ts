@@ -30,10 +30,9 @@ const CINEMATIC_COLOR_ALPHA_SLOW = 0.14;
 const CINEMATIC_COLOR_ALPHA_FAST = 0.04;
 const CINEMATIC_POINT_ALPHA_SLOW = 0.32;
 const CINEMATIC_POINT_ALPHA_FAST = 0.1;
-const CINEMATIC_START_COLOR = "#a5c814";
+const CINEMATIC_START_COLOR = getCssVar("--core-color-stroke", "#a5c814");
 const CINEMATIC_START_HSB = { hue: 72, saturation: 90, brightness: 78 };
-const CINEMATIC_END_COLOR = "#ff0000"; // not used directly, but defined for clarity
-const CINEMATIC_END_HSB = { hue: 0, saturation: 100, brightness: 100 };
+const CINEMATIC_END_HSB = { hue: 72, saturation: 90, brightness: 78 }; // We keep the same HSB values - no matter how fast a user is drawing
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));

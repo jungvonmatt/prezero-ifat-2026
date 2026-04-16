@@ -3,20 +3,34 @@
     <section class="playground">
       <div ref="canvasWrapEl" class="canvas-wrap">
         <canvas ref="canvasEl" class="circle-canvas" @pointerdown="startRound" @pointermove="moveRound" @pointerup="endRound" @pointercancel="endRound" />
+        <Transition name="intro">
+          <div v-if="!hasStarted" class="intro-copy">
+            <span>Zeichne den<br />perfekten Kreis!</span>
+            <button class="btn" @click="startGame">Los geht's!</button>
+          </div>
+        </Transition>
+        <Transition name="timer">
+          <div v-if="isDrawing && !result" class="timer-overlay" :class="{ warning: roundTimeLeftMs <= 3000 }">
+            <svg class="timer-ring" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="timer-ring-track" cx="50" cy="50" r="42" />
+              <circle class="timer-ring-progress" cx="50" cy="50" r="42" :style="{ strokeDashoffset: timerDashoffset }" />
+            </svg>
+            <div class="timer-overlay-content">
+              <strong>{{ timerText }}</strong>
+              <span class="live-score">{{ liveScoreText }}</span>
+            </div>
+          </div>
+        </Transition>
         <div v-if="result" class="controls">
-          <button class="btn" @click="resetRound">Try again</button>
+          <button class="btn" @click="resetRound">Neustart</button>
         </div>
       </div>
     </section>
 
     <aside class="sidebar">
+      
       <section class="hero card">
-        <div>
-          <h1>Create The Perfect Circle</h1>
-          <p class="muted">Draw one confident stroke around the guide. Release to get your precision score.</p>
-        </div>
         <div class="stats">
-          <p>Score</p>
           <strong>{{ scoreText }}%</strong>
           <span v-if="result">{{ result.label }}</span>
           <span v-else class="muted">Round not finished yet</span>
@@ -35,7 +49,7 @@
 
       <article class="card board top-scores">
         <div class="top-scores-header">
-          <h2>Top scores</h2>
+          <h2>Scores</h2>
           <span v-if="isLocalMode" class="local-badge">Lokal gespeichert</span>
         </div>
         <div v-if="highscores.length" class="highscore-list-wrap">
@@ -65,7 +79,14 @@ interface RoundResult {
   score: number;
   label: string;
   radialError: number;
+  radiusFitError: number;
   closureError: number;
+  directionChangeError: number;
+  timeoutError: number;
+  centerFailureError: number;
+  guideSizeFailureError: number;
+  coverageFailureError: number;
+  coverageDegrees: number;
 }
 
 interface HighscoreEntry {
@@ -76,6 +97,24 @@ interface HighscoreEntry {
 
 const { drawStroke } = useStrokeProfiles();
 const { strokeMode: selectedStrokeMode } = useGameSettings();
+const ROUND_TIMEOUT_MS = 8000;
+const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
+const GUIDE_RADIUS_FACTOR = 0.33;
+const GUIDE_FADE_OUT_MS = 900;
+const CENTER_ERROR_THRESHOLD = 0.9;
+const CENTER_OUTSIDE_STROKE_MARGIN = 1.05;
+const RADIUS_SIZE_PENALTY_RANGE = 0.55;
+const RADIUS_SIZE_PENALTY_EXPONENT = 1.2;
+const MIN_COVERAGE_DEGREES = 300;
+const SCORE_WEIGHT_RADIUS_FIT = 0.45;
+const SCORE_WEIGHT_RADIUS_SIZE = 0.25;
+const SCORE_WEIGHT_RADIAL = 0.2;
+const SCORE_WEIGHT_CLOSURE = 0.1;
+const DIRECTION_MIN_SEGMENT = 1;
+const DIRECTION_MIN_ANGLE_DELTA = 0.02;
+const DIRECTION_MIN_CENTER_DISTANCE_FACTOR = 0.12;
+const DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1;
+const ENABLE_SCORE_DEBUG = import.meta.dev;
 
 const canvasWrapEl = ref<HTMLDivElement | null>(null);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
@@ -86,6 +125,13 @@ const result = ref<RoundResult | null>(null);
 const highscores = ref<HighscoreEntry[]>([]);
 const playerName = ref("");
 const isSaving = ref(false);
+const hasStarted = ref(false);
+const rotationDirection = ref<-1 | 0 | 1>(0);
+const oppositeTurnStreak = ref(0);
+const roundTimeoutId = ref<number | null>(null);
+const roundTickId = ref<number | null>(null);
+const roundStartAt = ref<number | null>(null);
+const roundTimeLeftMs = ref(ROUND_TIMEOUT_MS);
 let ctx: CanvasRenderingContext2D | null = null;
 let logicalSize = 0;
 let dpr = 1;
@@ -122,6 +168,15 @@ const scoreText = computed(() => {
   }
   return result.value.score.toFixed(2);
 });
+const timerProgress = computed(() => clamp(roundTimeLeftMs.value / ROUND_TIMEOUT_MS, 0, 1));
+const timerDashoffset = computed(() => String(TIMER_RING_CIRCUMFERENCE * (1 - timerProgress.value)));
+const timerText = computed(() => `${(roundTimeLeftMs.value / 1000).toFixed(1)}s`);
+const liveScoreText = computed(() => {
+  if (!isDrawing.value || result.value) return "";
+  const liveScore = calculateLiveScore(points.value);
+  if (liveScore === null) return "Score --";
+  return `Score ${liveScore.toFixed(1)}%`;
+});
 
 function getLabel(score: number) {
   if (score >= 98) return "Almost machine-perfect";
@@ -134,6 +189,111 @@ function getLabel(score: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeAngleDelta(delta: number) {
+  if (delta > Math.PI) return delta - Math.PI * 2;
+  if (delta < -Math.PI) return delta + Math.PI * 2;
+  return delta;
+}
+
+function clearRoundTimeout() {
+  if (roundTimeoutId.value === null) return;
+  window.clearTimeout(roundTimeoutId.value);
+  roundTimeoutId.value = null;
+}
+
+function clearRoundTick() {
+  if (roundTickId.value === null) return;
+  window.clearInterval(roundTickId.value);
+  roundTickId.value = null;
+}
+
+function resetRoundClock() {
+  roundStartAt.value = null;
+  roundTimeLeftMs.value = ROUND_TIMEOUT_MS;
+}
+
+function startRoundTick(pointerId: number) {
+  clearRoundTick();
+  roundStartAt.value = performance.now();
+  roundTimeLeftMs.value = ROUND_TIMEOUT_MS;
+
+  roundTickId.value = window.setInterval(() => {
+    if (!isDrawing.value || activePointerId.value !== pointerId || roundStartAt.value === null) return;
+
+    const elapsed = performance.now() - roundStartAt.value;
+    roundTimeLeftMs.value = clamp(ROUND_TIMEOUT_MS - elapsed, 0, ROUND_TIMEOUT_MS);
+    redraw();
+  }, 50);
+}
+
+function startRoundTimeout(pointerId: number) {
+  clearRoundTimeout();
+  roundTimeoutId.value = window.setTimeout(() => {
+    if (!isDrawing.value || activePointerId.value !== pointerId) return;
+    abortRoundForTimeout(pointerId);
+  }, ROUND_TIMEOUT_MS);
+}
+
+function abortRoundForDirectionChange(pointerId: number) {
+  if (!canvasEl.value) return;
+
+  clearRoundTimeout();
+  clearRoundTick();
+  resetRoundClock();
+  isDrawing.value = false;
+  activePointerId.value = null;
+  rotationDirection.value = 0;
+  oppositeTurnStreak.value = 0;
+
+  if (canvasEl.value.hasPointerCapture(pointerId)) {
+    canvasEl.value.releasePointerCapture(pointerId);
+  }
+
+  result.value = {
+    score: 0,
+    label: "Direction changed: keep one continuous direction",
+    radialError: 1,
+    radiusFitError: 1,
+    closureError: 1,
+    directionChangeError: 1,
+    timeoutError: 0,
+    centerFailureError: 0,
+    guideSizeFailureError: 0,
+    coverageFailureError: 0,
+    coverageDegrees: 0,
+  };
+}
+
+function abortRoundForTimeout(pointerId: number) {
+  if (!canvasEl.value) return;
+
+  clearRoundTimeout();
+  clearRoundTick();
+  roundTimeLeftMs.value = 0;
+  isDrawing.value = false;
+  activePointerId.value = null;
+  rotationDirection.value = 0;
+  oppositeTurnStreak.value = 0;
+
+  if (canvasEl.value.hasPointerCapture(pointerId)) {
+    canvasEl.value.releasePointerCapture(pointerId);
+  }
+
+  result.value = {
+    score: 0,
+    label: "Time exceeded: draw the circle faster",
+    radialError: 1,
+    radiusFitError: 1,
+    closureError: 1,
+    directionChangeError: 0,
+    timeoutError: 1,
+    centerFailureError: 0,
+    guideSizeFailureError: 0,
+    coverageFailureError: 0,
+    coverageDegrees: 0,
+  };
 }
 
 function configureCanvas() {
@@ -162,6 +322,9 @@ function configureCanvas() {
 }
 
 function handleResize() {
+  clearRoundTimeout();
+  clearRoundTick();
+  resetRoundClock();
   isDrawing.value = false;
   activePointerId.value = null;
   points.value = [];
@@ -203,25 +366,88 @@ function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
   return filteredPoints;
 }
 
+function calculateLiveScore(rawStrokePoints: StrokePoint[]): number | null {
+  if (logicalSize <= 0) return null;
+
+  const rawPoints = getScoringPoints(rawStrokePoints);
+  if (rawPoints.length < 10) return null;
+
+  const guideCenterX = logicalSize / 2;
+  const guideCenterY = logicalSize / 2;
+  const targetRadius = logicalSize * GUIDE_RADIUS_FACTOR;
+  const center = rawPoints.reduce((acc, p) => ({ x: acc.x + p.x / rawPoints.length, y: acc.y + p.y / rawPoints.length }), { x: 0, y: 0 });
+  const distances = rawPoints.map((p) => Math.hypot(p.x - center.x, p.y - center.y));
+  const avgRadius = distances.reduce((a, v) => a + v, 0) / distances.length;
+
+  if (!Number.isFinite(avgRadius) || avgRadius <= 0) return null;
+
+  const radiusRatio = avgRadius / Math.max(targetRadius, 0.0001);
+  const radiusFitError =
+    distances.reduce((acc, r) => {
+      return acc + Math.abs(r - targetRadius) / Math.max(targetRadius, 0.0001);
+    }, 0) / distances.length;
+
+  const radiusRatioError = Math.abs(radiusRatio - 1);
+  const radiusSizePenalty = Math.pow(clamp(radiusRatioError / RADIUS_SIZE_PENALTY_RANGE, 0, 1), RADIUS_SIZE_PENALTY_EXPONENT);
+  const variance =
+    distances.reduce((acc, r) => {
+      return acc + (r - avgRadius) ** 2;
+    }, 0) / distances.length;
+  const radialError = Math.sqrt(variance) / Math.max(avgRadius, 0.0001);
+
+  const first = rawPoints[0];
+  const last = rawPoints[rawPoints.length - 1];
+  if (!first || !last) return null;
+
+  const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
+  const closureError = closureGap / Math.max(targetRadius, 0.0001);
+  const combinedError = clamp(radiusFitError * SCORE_WEIGHT_RADIUS_FIT + radiusSizePenalty * SCORE_WEIGHT_RADIUS_SIZE + radialError * SCORE_WEIGHT_RADIAL + closureError * SCORE_WEIGHT_CLOSURE, 0, 1);
+
+  let signedCoverage = 0;
+  for (let i = 1; i < rawPoints.length; i += 1) {
+    const prev = rawPoints[i - 1];
+    const current = rawPoints[i];
+    if (!prev || !current) continue;
+
+    const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
+    const currentAngle = Math.atan2(current.y - guideCenterY, current.x - guideCenterX);
+    signedCoverage += normalizeAngleDelta(currentAngle - prevAngle);
+  }
+
+  const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
+  const coverageProgress = clamp(coverageDegrees / MIN_COVERAGE_DEGREES, 0, 1);
+  const centerOffset = Math.hypot(center.x - guideCenterX, center.y - guideCenterY);
+  const centerError = centerOffset / Math.max(targetRadius, 0.0001);
+  const centerPenalty = clamp(centerError / CENTER_ERROR_THRESHOLD, 0, 1);
+  const progressPenalty = (1 - coverageProgress) * 0.65 + centerPenalty * 0.35;
+
+  const liveError = clamp(combinedError * 0.75 + progressPenalty * 0.25, 0, 1);
+  return clamp((1 - liveError) * 100, 0, 100);
+}
+
 function redraw() {
   if (!ctx || !logicalSize) return;
 
   ctx.clearRect(0, 0, logicalSize, logicalSize);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = getCssVar("--core-color-bg", "#013c4a");
   ctx.fillRect(0, 0, logicalSize, logicalSize);
 
   const cx = logicalSize / 2;
   const cy = logicalSize / 2;
-  const radius = logicalSize * 0.33;
+  const radius = logicalSize * GUIDE_RADIUS_FACTOR;
+  const guideOpacity = isDrawing.value && roundStartAt.value !== null ? clamp(1 - (performance.now() - roundStartAt.value) / GUIDE_FADE_OUT_MS, 0, 1) : 1;
 
-  ctx.strokeStyle = getCssVar("--core-color-secondary-base", "#a5c814");
+  ctx.strokeStyle = getCssVar("--core-color-stroke", "#a5c814");
 
-  ctx.lineWidth = 2;
-  ctx.setLineDash([7, 7]);
+  ctx.save();
+  ctx.globalAlpha = guideOpacity;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([22, 22]);
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.restore();
 
   if (points.value.length > 1) {
     const drawContext: DrawContext = {
@@ -246,7 +472,13 @@ function pointFromPointer(event: PointerEvent): Point | null {
   return { x, y };
 }
 
+function startGame() {
+  hasStarted.value = true;
+  resetRound();
+}
+
 function startRound(event: PointerEvent) {
+  if (!hasStarted.value) return;
   if (hasResult.value) return;
   const point = pointFromPointer(event);
   if (!point || !canvasEl.value) return;
@@ -255,8 +487,12 @@ function startRound(event: PointerEvent) {
 
   isDrawing.value = true;
   activePointerId.value = event.pointerId;
+  rotationDirection.value = 0;
+  oppositeTurnStreak.value = 0;
   points.value = [strokePoint];
   canvasEl.value.setPointerCapture(event.pointerId);
+  startRoundTick(event.pointerId);
+  startRoundTimeout(event.pointerId);
   redraw();
 }
 
@@ -264,6 +500,49 @@ function moveRound(event: PointerEvent) {
   if (!isDrawing.value || activePointerId.value !== event.pointerId) return;
   const point = pointFromPointer(event);
   if (!point) return;
+
+  const pointCount = points.value.length;
+  if (pointCount >= 1 && logicalSize > 0) {
+    const prev = points.value[pointCount - 1];
+
+    if (prev) {
+      const dx = point.x - prev.x;
+      const dy = point.y - prev.y;
+      const segmentLength = Math.hypot(dx, dy);
+
+      if (segmentLength >= DIRECTION_MIN_SEGMENT) {
+        const guideCenterX = logicalSize / 2;
+        const guideCenterY = logicalSize / 2;
+        const minCenterDistance = logicalSize * DIRECTION_MIN_CENTER_DISTANCE_FACTOR;
+        const prevDistanceToCenter = Math.hypot(prev.x - guideCenterX, prev.y - guideCenterY);
+        const currentDistanceToCenter = Math.hypot(point.x - guideCenterX, point.y - guideCenterY);
+
+        // Ignore unstable angle deltas close to the center.
+        if (prevDistanceToCenter >= minCenterDistance && currentDistanceToCenter >= minCenterDistance) {
+          const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
+          const currentAngle = Math.atan2(point.y - guideCenterY, point.x - guideCenterX);
+          const angleDelta = normalizeAngleDelta(currentAngle - prevAngle);
+
+          if (Math.abs(angleDelta) >= DIRECTION_MIN_ANGLE_DELTA) {
+            const nextDirection: -1 | 1 = angleDelta > 0 ? 1 : -1;
+
+            if (rotationDirection.value === 0) {
+              rotationDirection.value = nextDirection;
+              oppositeTurnStreak.value = 0;
+            } else if (rotationDirection.value !== nextDirection) {
+              oppositeTurnStreak.value += 1;
+              if (oppositeTurnStreak.value >= DIRECTION_OPPOSITE_STREAK_TO_ABORT) {
+                abortRoundForDirectionChange(event.pointerId);
+                return;
+              }
+            } else {
+              oppositeTurnStreak.value = 0;
+            }
+          }
+        }
+      }
+    }
+  }
 
   const strokePoint = toStrokePoint(point, event.pressure);
   points.value.push(strokePoint);
@@ -278,15 +557,82 @@ function evaluateRound() {
       score: 0,
       label: "Draw a full circle for a score",
       radialError: 1,
+      radiusFitError: 1,
       closureError: 1,
+      directionChangeError: 0,
+      timeoutError: 0,
+      centerFailureError: 0,
+      guideSizeFailureError: 0,
+      coverageFailureError: 0,
+      coverageDegrees: 0,
     };
     return;
   }
 
   const center = rawPoints.reduce((acc, p) => ({ x: acc.x + p.x / rawPoints.length, y: acc.y + p.y / rawPoints.length }), { x: 0, y: 0 });
-
+  const guideCenterX = logicalSize / 2;
+  const guideCenterY = logicalSize / 2;
+  const targetRadius = logicalSize * GUIDE_RADIUS_FACTOR;
   const distances = rawPoints.map((p) => Math.hypot(p.x - center.x, p.y - center.y));
   const avgRadius = distances.reduce((a, v) => a + v, 0) / distances.length;
+  const centerOffset = Math.hypot(center.x - guideCenterX, center.y - guideCenterY);
+  const centerError = centerOffset / Math.max(targetRadius, 0.0001);
+  const guideCenterOutsideStroke = centerOffset > avgRadius * CENTER_OUTSIDE_STROKE_MARGIN;
+
+  if (centerError > CENTER_ERROR_THRESHOLD || guideCenterOutsideStroke) {
+    result.value = {
+      score: 0,
+      label: "Center miss: keep the guide center inside your circle",
+      radialError: 1,
+      radiusFitError: 1,
+      closureError: 1,
+      directionChangeError: 0,
+      timeoutError: 0,
+      centerFailureError: 1,
+      guideSizeFailureError: 0,
+      coverageFailureError: 0,
+      coverageDegrees: 0,
+    };
+    return;
+  }
+
+  let signedCoverage = 0;
+  for (let i = 1; i < rawPoints.length; i += 1) {
+    const prev = rawPoints[i - 1];
+    const current = rawPoints[i];
+    if (!prev || !current) continue;
+
+    const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
+    const currentAngle = Math.atan2(current.y - guideCenterY, current.x - guideCenterX);
+    signedCoverage += normalizeAngleDelta(currentAngle - prevAngle);
+  }
+
+  const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
+
+  if (coverageDegrees < MIN_COVERAGE_DEGREES) {
+    result.value = {
+      score: 0,
+      label: "Incomplete arc: draw almost a full circle",
+      radialError: 1,
+      radiusFitError: 1,
+      closureError: 1,
+      directionChangeError: 0,
+      timeoutError: 0,
+      centerFailureError: 0,
+      guideSizeFailureError: 0,
+      coverageFailureError: 1,
+      coverageDegrees,
+    };
+    return;
+  }
+  const radiusRatio = avgRadius / Math.max(targetRadius, 0.0001);
+
+  const radiusFitError =
+    distances.reduce((acc, r) => {
+      return acc + Math.abs(r - targetRadius) / Math.max(targetRadius, 0.0001);
+    }, 0) / distances.length;
+  const radiusRatioError = Math.abs(radiusRatio - 1);
+  const radiusSizePenalty = Math.pow(clamp(radiusRatioError / RADIUS_SIZE_PENALTY_RANGE, 0, 1), RADIUS_SIZE_PENALTY_EXPONENT);
 
   const variance =
     distances.reduce((acc, r) => {
@@ -302,37 +648,89 @@ function evaluateRound() {
       score: 0,
       label: "Draw a full circle for a score",
       radialError: 1,
+      radiusFitError: 1,
       closureError: 1,
+      directionChangeError: 0,
+      timeoutError: 0,
+      centerFailureError: 0,
+      guideSizeFailureError: 0,
+      coverageFailureError: 0,
+      coverageDegrees,
     };
     return;
   }
 
   const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
-  const closureError = closureGap / Math.max(avgRadius * 0.75, 0.0001);
+  const closureError = closureGap / Math.max(targetRadius, 0.0001);
 
-  const combinedError = clamp(radialError * 2.8 + closureError * 0.35, 0, 1);
+  const combinedError = clamp(radiusFitError * SCORE_WEIGHT_RADIUS_FIT + radiusSizePenalty * SCORE_WEIGHT_RADIUS_SIZE + radialError * SCORE_WEIGHT_RADIAL + closureError * SCORE_WEIGHT_CLOSURE, 0, 1);
   const score = clamp((1 - combinedError) * 100, 0, 100);
+
+  if (ENABLE_SCORE_DEBUG) {
+    console.debug("circle-score-breakdown", {
+      score,
+      combinedError,
+      radiusFitError,
+      radiusRatio,
+      radiusRatioError,
+      radiusSizePenalty,
+      radialError,
+      closureError,
+      coverageDegrees,
+      centerError,
+      thresholds: {
+        center: CENTER_ERROR_THRESHOLD,
+        radiusSizePenaltyRange: RADIUS_SIZE_PENALTY_RANGE,
+        radiusSizePenaltyExponent: RADIUS_SIZE_PENALTY_EXPONENT,
+        coverage: MIN_COVERAGE_DEGREES,
+      },
+      weights: {
+        radiusFit: SCORE_WEIGHT_RADIUS_FIT,
+        radiusSize: SCORE_WEIGHT_RADIUS_SIZE,
+        radial: SCORE_WEIGHT_RADIAL,
+        closure: SCORE_WEIGHT_CLOSURE,
+      },
+    });
+  }
 
   result.value = {
     score,
     label: getLabel(score),
     radialError,
+    radiusFitError,
     closureError,
+    directionChangeError: 0,
+    timeoutError: 0,
+    centerFailureError: 0,
+    guideSizeFailureError: 0,
+    coverageFailureError: 0,
+    coverageDegrees,
   };
 }
 
 function endRound(event: PointerEvent) {
   if (!isDrawing.value || activePointerId.value !== event.pointerId || !canvasEl.value) return;
 
+  clearRoundTimeout();
+  clearRoundTick();
+  resetRoundClock();
   isDrawing.value = false;
+  activePointerId.value = null;
+  rotationDirection.value = 0;
+  oppositeTurnStreak.value = 0;
   canvasEl.value.releasePointerCapture(event.pointerId);
   evaluateRound();
 }
 
 function resetRound() {
+  clearRoundTimeout();
+  clearRoundTick();
+  resetRoundClock();
   points.value = [];
   result.value = null;
   activePointerId.value = null;
+  rotationDirection.value = 0;
+  oppositeTurnStreak.value = 0;
   playerName.value = "";
   redraw();
 }
@@ -391,11 +789,15 @@ watch(selectedStrokeMode, () => {
 });
 
 onBeforeUnmount(() => {
+  clearRoundTimeout();
+  clearRoundTick();
   window.removeEventListener("resize", handleResize);
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "~/assets/styles/colors" as variables;
+
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -427,8 +829,6 @@ onBeforeUnmount(() => {
   max-width: 100%;
   aspect-ratio: 1;
   display: block;
-  /* border-radius: 4px; */
-  /* border: 1px solid var(--line); */
   touch-action: none;
   background: #fff;
 }
@@ -443,6 +843,120 @@ onBeforeUnmount(() => {
   gap: 12px;
   flex-shrink: 0;
   z-index: 2;
+}
+
+.intro-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: variables.$core-color-white-soft;
+  text-align: center;
+  // font-family: "Roboto Condensed";
+  font-size: 48px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 1px;
+  z-index: 3;
+}
+
+.intro-enter-active,
+.intro-leave-active {
+  transition:
+    opacity 260ms ease,
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.intro-enter-from,
+.intro-leave-to {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 14px)) scale(0.98);
+}
+
+.timer-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 110px;
+  height: 110px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, #ffffff 82%, transparent);
+  backdrop-filter: blur(1.5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+}
+
+.timer-enter-active,
+.timer-leave-active {
+  transition:
+    opacity 260ms ease,
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.timer-enter-from,
+.timer-leave-to {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 14px)) scale(0.98);
+}
+
+.timer-overlay strong {
+  font-size: 1.2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-overlay-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-score {
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #{variables.$core-color-tertiary-base} 72%, #ffffff);
+}
+
+.timer-ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.timer-ring-track,
+.timer-ring-progress {
+  fill: none;
+  stroke-width: 6;
+}
+
+.timer-ring-track {
+  stroke: color-mix(in srgb, #{variables.$line} 78%, transparent);
+}
+
+.timer-ring-progress {
+  stroke: variables.$core-color-secondary-base;
+  stroke-linecap: round;
+  stroke-dasharray: 263.89378290154264;
+  transition: stroke 0.2s ease;
+}
+
+.timer-overlay.warning .timer-ring-progress {
+  stroke: #e05b3f;
 }
 
 .sidebar {
@@ -469,7 +983,7 @@ onBeforeUnmount(() => {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: variables.$muted;
 }
 
 .stats strong {
@@ -490,7 +1004,7 @@ onBeforeUnmount(() => {
 
 .save-form input {
   flex: 1;
-  border: 1px solid var(--line);
+  border: 1px solid variables.$line;
   border-radius: 4px;
   padding: 10px 12px;
   font: inherit;
@@ -527,12 +1041,12 @@ onBeforeUnmount(() => {
 
 .highscore-list-wrap::before {
   top: 0;
-  background: linear-gradient(to bottom, var(--surface), transparent);
+  background: linear-gradient(to bottom, variables.$surface, transparent);
 }
 
 .highscore-list-wrap::after {
   bottom: 0;
-  background: linear-gradient(to top, var(--surface), transparent);
+  background: linear-gradient(to top, variables.$surface, transparent);
 }
 
 .highscore-list {
@@ -545,7 +1059,7 @@ onBeforeUnmount(() => {
   min-height: 0;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
+  scrollbar-color: variables.$line transparent;
 }
 
 .highscore-list::-webkit-scrollbar {
@@ -557,12 +1071,12 @@ onBeforeUnmount(() => {
 }
 
 .highscore-list::-webkit-scrollbar-thumb {
-  background: var(--line);
+  background: variables.$line;
   border-radius: 999px;
 }
 
 .highscore-list::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: variables.$muted;
 }
 
 .highscore-list li {
@@ -570,7 +1084,7 @@ onBeforeUnmount(() => {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid variables.$line;
   padding: 10px 0;
 }
 
@@ -595,8 +1109,8 @@ onBeforeUnmount(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted);
-  background: var(--line);
+  color: variables.$muted;
+  background: variables.$line;
   padding: 2px 7px;
   border-radius: 999px;
   white-space: nowrap;

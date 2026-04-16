@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxt/content'],
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/styles/main.scss'],
   runtimeConfig: {
     public: {
       // Stroke drawing mode: 'fixed' | 'deviation' | 'cinematic' (shown as "Realistic" in UI)
