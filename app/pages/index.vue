@@ -370,30 +370,26 @@ function calculateLiveScore(rawStrokePoints: StrokePoint[]): number | null {
   if (logicalSize <= 0) return null;
 
   const rawPoints = getScoringPoints(rawStrokePoints);
-  if (rawPoints.length < 10) return null;
+  if (rawPoints.length < 4) return null;
 
   const guideCenterX = logicalSize / 2;
   const guideCenterY = logicalSize / 2;
   const targetRadius = logicalSize * GUIDE_RADIUS_FACTOR;
-  const center = rawPoints.reduce((acc, p) => ({ x: acc.x + p.x / rawPoints.length, y: acc.y + p.y / rawPoints.length }), { x: 0, y: 0 });
-  const distances = rawPoints.map((p) => Math.hypot(p.x - center.x, p.y - center.y));
+  const distances = rawPoints.map((p) => Math.hypot(p.x - guideCenterX, p.y - guideCenterY));
   const avgRadius = distances.reduce((a, v) => a + v, 0) / distances.length;
 
   if (!Number.isFinite(avgRadius) || avgRadius <= 0) return null;
 
-  const radiusRatio = avgRadius / Math.max(targetRadius, 0.0001);
   const radiusFitError =
     distances.reduce((acc, r) => {
       return acc + Math.abs(r - targetRadius) / Math.max(targetRadius, 0.0001);
     }, 0) / distances.length;
 
-  const radiusRatioError = Math.abs(radiusRatio - 1);
-  const radiusSizePenalty = Math.pow(clamp(radiusRatioError / RADIUS_SIZE_PENALTY_RANGE, 0, 1), RADIUS_SIZE_PENALTY_EXPONENT);
   const variance =
     distances.reduce((acc, r) => {
       return acc + (r - avgRadius) ** 2;
     }, 0) / distances.length;
-  const radialError = Math.sqrt(variance) / Math.max(avgRadius, 0.0001);
+  const radialError = Math.sqrt(variance) / Math.max(targetRadius, 0.0001);
 
   const first = rawPoints[0];
   const last = rawPoints[rawPoints.length - 1];
@@ -401,7 +397,6 @@ function calculateLiveScore(rawStrokePoints: StrokePoint[]): number | null {
 
   const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
   const closureError = closureGap / Math.max(targetRadius, 0.0001);
-  const combinedError = clamp(radiusFitError * SCORE_WEIGHT_RADIUS_FIT + radiusSizePenalty * SCORE_WEIGHT_RADIUS_SIZE + radialError * SCORE_WEIGHT_RADIAL + closureError * SCORE_WEIGHT_CLOSURE, 0, 1);
 
   let signedCoverage = 0;
   for (let i = 1; i < rawPoints.length; i += 1) {
@@ -415,14 +410,14 @@ function calculateLiveScore(rawStrokePoints: StrokePoint[]): number | null {
   }
 
   const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
-  const coverageProgress = clamp(coverageDegrees / MIN_COVERAGE_DEGREES, 0, 1);
-  const centerOffset = Math.hypot(center.x - guideCenterX, center.y - guideCenterY);
-  const centerError = centerOffset / Math.max(targetRadius, 0.0001);
-  const centerPenalty = clamp(centerError / CENTER_ERROR_THRESHOLD, 0, 1);
-  const progressPenalty = (1 - coverageProgress) * 0.65 + centerPenalty * 0.35;
+  const coverageProgress = clamp(coverageDegrees / 360, 0, 1);
+  const closureWeight = SCORE_WEIGHT_CLOSURE * coverageProgress * coverageProgress;
 
-  const liveError = clamp(combinedError * 0.75 + progressPenalty * 0.25, 0, 1);
-  return clamp((1 - liveError) * 100, 0, 100);
+  // Motivational live score: start high when trajectory is clean, then decay with deviations.
+  const liveError = clamp(radiusFitError * 0.62 + radialError * 0.30 + closureError * closureWeight, 0, 1);
+  const liveScore = Math.pow(1 - liveError, 0.72) * 100;
+
+  return clamp(liveScore, 0, 100);
 }
 
 function redraw() {
