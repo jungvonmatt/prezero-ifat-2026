@@ -7,13 +7,18 @@ export interface HighscoreEntry {
   createdAt: string
 }
 
-const dataFilePath = resolve(process.cwd(), 'content/highscores.json')
+function getDataFilePath() {
+  const config = useRuntimeConfig()
+  const configuredPath = config.highscoreFilePath || 'content/highscores.json'
+  return resolve(process.cwd(), configuredPath)
+}
 
 interface HighscoreFile {
   entries: HighscoreEntry[]
 }
 
 async function ensureDataFile() {
+  const dataFilePath = getDataFilePath()
   await mkdir(dirname(dataFilePath), { recursive: true })
 
   try {
@@ -24,6 +29,7 @@ async function ensureDataFile() {
 }
 
 export async function readHighscores() {
+  const dataFilePath = getDataFilePath()
   await ensureDataFile()
   const raw = await readFile(dataFilePath, 'utf8')
 
@@ -45,6 +51,7 @@ export async function readHighscores() {
 }
 
 export async function addHighscore(input: { name?: string, score?: number }) {
+  const dataFilePath = getDataFilePath()
   const safeName = (input.name || 'Anonymous').trim().slice(0, 24) || 'Anonymous'
   const safeScore = Number.isFinite(input.score) ? Math.min(100, Math.max(0, Number(input.score))) : 0
 
@@ -64,6 +71,7 @@ export async function addHighscore(input: { name?: string, score?: number }) {
 }
 
 export async function setHighscores(entries: HighscoreEntry[]) {
+  const dataFilePath = getDataFilePath()
   const updated = entries
     .filter((entry) => {
       return typeof entry?.name === 'string' && typeof entry?.score === 'number' && typeof entry?.createdAt === 'string'
@@ -89,6 +97,7 @@ export async function clearHighscores() {
 }
 
 export async function deleteHighscore(createdAt: string) {
+  const dataFilePath = getDataFilePath()
   const current = await readHighscores()
   const updated = current.filter((entry) => entry.createdAt !== createdAt)
   await writeFile(dataFilePath, JSON.stringify({ entries: updated }, null, 2), 'utf8')
