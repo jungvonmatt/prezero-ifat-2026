@@ -7,7 +7,10 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "deploy:node:development": "./scripts/build-node.sh development && ./scripts/deploy-node.sh development",
+    "deploy:node:staging": "./scripts/build-node.sh staging && ./scripts/deploy-node.sh staging",
+    "deploy:node:production": "./scripts/build-node.sh production && ./scripts/deploy-node.sh production"
   },
   "dependencies": {
     "@nuxt/content": "^3.12.0",

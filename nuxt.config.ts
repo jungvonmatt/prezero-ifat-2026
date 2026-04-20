@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/content'],
   css: ['~/assets/styles/main.scss'],
   runtimeConfig: {
+    highscoreFilePath: process.env.HIGHSCORE_FILE_PATH || 'content/highscores.json',
     public: {
       // Stroke drawing mode: 'fixed' | 'deviation' | 'cinematic' (shown as "Realistic" in UI)
       // Override via NUXT_PUBLIC_STROKE_MODE environment variable
