@@ -1,54 +1,31 @@
 <template>
   <section class="card admin-panel">
-    <div class="admin-head">
-      <div>
-        <h1>Admin panel</h1>
-      </div>
-      <NuxtLink class="btn" to="/">Back to game</NuxtLink>
-    </div>
-
-    <div>
-      <h2>Game settings</h2>
-      <label class="mode-picker">
-        <span>Stroke behavior</span>
-        <select :value="selectedStrokeMode" @change="onModeChange">
-          <option v-for="option in strokeModeOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </label>
-    </div>
-
     <div>
       <h2>Highscore entries</h2>
       <div class="admin-actions">
         <button class="btn secondary" type="button" :disabled="isBusy" @click="exportHighscores">Export backup</button>
         <button class="btn secondary" type="button" :disabled="isBusy" @click="openImportDialog">Import backup</button>
         <button class="btn danger" type="button" :disabled="isBusy" @click="resetHighscores">Reset highscores</button>
+        <p v-if="statusMessage" class="status-text">{{ statusMessage }}</p>
         <input ref="fileInputEl" class="hidden-input" type="file" accept="application/json" @change="importHighscores" />
       </div>
-      <p v-if="statusMessage" class="status-text">{{ statusMessage }}</p>
-      <ol v-if="highscores.length" class="highscore-list">
-        <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
-          <span>{{ index + 1 }}.</span>
-          <strong>{{ entry.name }}</strong>
-          <em>{{ entry.score.toFixed(2) }}%</em>
-          <button class="delete-x" type="button" :disabled="isBusy" :aria-label="`Delete ${entry.name}`" @click="deleteEntry(entry)">X</button>
-        </li>
-      </ol>
+
+      <div v-if="highscores.length" class="highscore-list-wrap">
+        <ol class="highscore-list">
+          <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
+            <span class="rank">#{{ index + 1 }}</span>
+            <span class="entry-name">{{ entry.name }}</span>
+            <em>{{ entry.score.toFixed(2) }}%</em>
+            <button class="delete-x" type="button" :disabled="isBusy" :aria-label="`Delete ${entry.name}`" @click="deleteEntry(entry)">X</button>
+          </li>
+        </ol>
+      </div>
       <p v-else class="muted">No highscores yet.</p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { type StrokeMode } from "../composables/useStrokeProfiles";
-
-const { strokeMode: selectedStrokeMode, strokeModeOptions, setStrokeMode } = useGameSettings();
-
-function onModeChange(e: Event) {
-  setStrokeMode((e.target as HTMLSelectElement).value as StrokeMode);
-}
 interface HighscoreEntry {
   name: string;
   score: number;
@@ -180,29 +157,16 @@ onMounted(async () => {
 <style scoped lang="scss">
 @use "~/assets/styles/colors" as variables;
 
-h2 {
-  margin-bottom: 12px;
-}
 .admin-panel {
-  padding: clamp(18px, 3vw, 30px);
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
   height: 100%;
-  margin-bottom: 32px;
-}
-
-.admin-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  margin-top: 15dvh;
 }
 
 .admin-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  align-items: center;
+  gap: 16px;
   margin: 24px 0 24px;
 }
 
@@ -211,74 +175,111 @@ h2 {
 }
 
 .status-text {
-  margin: 8px 0 16px;
-  font-weight: 600;
+  margin: 16px 25px;
+}
+
+.highscore-list-wrap {
+  position: relative;
+  height: 50dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.highscore-list-wrap::before,
+.highscore-list-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.highscore-list-wrap::before {
+  top: 0;
+  background: linear-gradient(to bottom, #{variables.$core-color-bg}, transparent);
+}
+
+.highscore-list-wrap::after {
+  bottom: 0;
+  background: linear-gradient(to top, #{variables.$core-color-bg}, transparent);
 }
 
 .highscore-list {
   margin: 0;
-  padding: 0;
+  padding: 18px 0;
   list-style: none;
+  flex: 1;
+  height: 100%;
+  overflow-y: scroll;
+  min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.highscore-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .highscore-list li {
   display: grid;
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
-  gap: 10px;
-  border-top: 1px solid variables.$core-color-white-soft;
-  padding: 10px 0;
+  gap: 12px;
+  padding: 12px 16px;
+
+  font-size: 32px;
+
+  border-radius: 10px 0 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: variables.$core-color-bg;
+
+  margin: 12px 0;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 1);
+  }
 }
 
-.highscore-list li:first-child {
-  border-top: 0;
-  padding-top: 0;
+.highscore-list .rank {
+  color: variables.$core-color-green;
+  width: 60px;
+}
+
+.highscore-list .entry-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .highscore-list em {
   font-style: normal;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .btn.danger {
   background: #8d1c1c;
-}
-
-.admin-settings {
-  margin-bottom: 14px;
-}
-
-.mode-picker {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.mode-picker select {
-  border: 1px solid variables.$core-color-white-soft;
-  border-radius: 4px;
-  padding: 10px 40px 10px 12px;
-  font: inherit;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #fff;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%2300343d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: 12px 8px;
-  background-position: right 18px center;
-  color: inherit;
+  color: variables.$core-color-white;
 }
 
 .delete-x {
   border: 1px solid variables.$core-color-white-soft;
-  background: #fff;
-  color: #8d1c1c;
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
+}
+
+.delete-x:hover:not(:disabled) {
+  border-color: #fff;
 }
 
 .delete-x:disabled {
@@ -292,6 +293,7 @@ h2 {
   }
 
   .highscore-list li {
+    font-size: 26px;
     grid-template-columns: auto 1fr auto;
   }
 

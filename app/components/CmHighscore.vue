@@ -8,7 +8,7 @@
       <ol class="highscore-list">
         <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
           <span>#{{ index + 1 }}</span>
-          <!-- <strong>{{ entry.name }}</strong> -->
+          <!-- <p>{{ entry.name }}</p> -->
           <span>{{ entry.score.toFixed(1) }}%</span>
         </li>
       </ol>
@@ -86,14 +86,11 @@ defineProps<{
   align-items: center;
 
   color: #fff;
-  font-family: Goldman;
   font-size: 40px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
 
   border-radius: 10px 0 10px 10px;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: variables.$core-color-bg;
 
   margin: 12px 0;
 

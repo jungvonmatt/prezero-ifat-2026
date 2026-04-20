@@ -6,6 +6,7 @@
       :has-started="hasStarted"
       :is-drawing="isDrawing"
       :has-result="hasResult"
+      :is-new-highscore="isNewHighscore"
       :score-display-text="scoreDisplayText"
       :round-time-left-ms="roundTimeLeftMs"
       :timer-text="timerText"
@@ -42,6 +43,21 @@ const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLe
 
 const { highscores, playerName, isSaving, isLocalMode, saveScore } = useHighscores({ result });
 
+const isNewHighscore = ref(false);
+
+watch(result, (nextResult) => {
+  if (!nextResult) {
+    isNewHighscore.value = false;
+    return;
+  }
+
+  const bestExistingScore = highscores.value.reduce((maxScore, entry) => {
+    return Math.max(maxScore, entry.score);
+  }, Number.NEGATIVE_INFINITY);
+
+  isNewHighscore.value = nextResult.score > bestExistingScore;
+});
+
 function resetRound() {
   resetGameRound();
   playerName.value = "";
@@ -56,7 +72,7 @@ article {
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 16px;
+  gap: 48px;
   flex: 1;
   min-height: 0;
 }

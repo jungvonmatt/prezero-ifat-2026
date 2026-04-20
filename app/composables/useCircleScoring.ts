@@ -1,4 +1,4 @@
-import type { StrokePoint } from "./useStrokeProfiles";
+import type { StrokePoint } from "./useStrokeRenderer";
 
 export interface Point {
   x: number;

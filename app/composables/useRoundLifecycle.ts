@@ -1,7 +1,7 @@
 import { ref, type Ref } from "vue";
 import type { Point, RoundResult } from "./useCircleScoring";
 import { clamp, normalizeAngleDelta } from "./useCircleScoring";
-import type { StrokePoint } from "./useStrokeProfiles";
+import type { StrokePoint } from "./useStrokeRenderer";
 
 interface UseRoundLifecycleOptions {
   canvasEl: Ref<HTMLCanvasElement | null>;

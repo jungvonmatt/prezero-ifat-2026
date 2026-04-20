@@ -1,13 +1,12 @@
-import { computed, onBeforeUnmount, onMounted, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted } from "vue";
 import { calculateLiveScore, clamp, getLabel, type Point, type RoundResult } from "./useCircleScoring";
 import { useCanvasRenderer } from "./useCanvasRenderer";
-import { useGameSettings } from "./useGameSettings";
 import { useRoundLifecycle } from "./useRoundLifecycle";
-import { useStrokeProfiles, type StrokePoint } from "./useStrokeProfiles";
+import { useStrokeRenderer, type StrokePoint } from "./useStrokeRenderer";
 
 const ROUND_TIMEOUT_MS = 8000;
 const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
-const GUIDE_RADIUS_FACTOR = 0.33;
+const GUIDE_RADIUS_FACTOR = 0.45;
 const GUIDE_FADE_OUT_MS = 900;
 const SCORE_WEIGHT_CLOSURE = 0.1;
 const DIRECTION_MIN_SEGMENT = 1;
@@ -19,8 +18,7 @@ const DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1;
 const ENABLE_SCORE_DEBUG = import.meta.dev;
 
 export function useCircleGame() {
-  const { drawStroke } = useStrokeProfiles();
-  const { strokeMode: selectedStrokeMode } = useGameSettings();
+  const { drawStroke } = useStrokeRenderer();
 
   function toStrokePoint(point: Point, pressure?: number): StrokePoint {
     return {
@@ -84,7 +82,6 @@ export function useCircleGame() {
     getPoints: () => points.value,
     getIsDrawing: () => isDrawing.value,
     getRoundStartAt: () => roundStartAt.value,
-    selectedStrokeMode,
     guideRadiusFactor: GUIDE_RADIUS_FACTOR,
     guideFadeOutMs: GUIDE_FADE_OUT_MS,
     drawStroke,
@@ -133,7 +130,7 @@ export function useCircleGame() {
     if (!isDrawing.value) return "";
 
     const liveScore = calculateLiveScore(points.value, logicalSize.value, GUIDE_RADIUS_FACTOR, SCORE_WEIGHT_CLOSURE);
-    if (liveScore === null) return "--";
+    if (liveScore === null) return "0%";
     return `${liveScore.toFixed(1)}%`;
   });
 
@@ -145,10 +142,6 @@ export function useCircleGame() {
   onMounted(() => {
     configureCanvas();
     window.addEventListener("resize", handleResize, { passive: true });
-  });
-
-  watch(selectedStrokeMode, () => {
-    redraw();
   });
 
   onBeforeUnmount(() => {

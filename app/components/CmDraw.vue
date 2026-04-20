@@ -10,7 +10,13 @@
         </div>
       </Transition>
 
-      <strong v-if="isDrawing || hasResult" class="score-display">{{ scoreDisplayText }}</strong>
+      <p v-if="isDrawing || hasResult" class="score-display">{{ scoreDisplayText }}</p>
+
+      <Transition name="fade">
+        <p v-if="hasResult && isNewHighscore" class="highscore-hint">Highscore!</p>
+      </Transition>
+
+      <CmConfettiRain :active="hasResult" />
 
       <Transition name="timer">
         <div v-if="isDrawing && !hasResult" class="timer-overlay" :class="{ warning: roundTimeLeftMs <= 3000 }">
@@ -19,7 +25,7 @@
             <circle class="timer-ring-progress" cx="50" cy="50" r="42" :style="{ strokeDashoffset: timerDashoffset }" />
           </svg>
           <div class="timer-overlay-content">
-            <strong class="timer-caption">{{ timerText }}</strong>
+            <p class="timer-caption">{{ timerText }}</p>
           </div>
         </div>
       </Transition>
@@ -36,6 +42,7 @@ defineProps<{
   hasStarted: boolean;
   isDrawing: boolean;
   hasResult: boolean;
+  isNewHighscore: boolean;
   scoreDisplayText: string;
   roundTimeLeftMs: number;
   timerText: string;
@@ -94,11 +101,22 @@ const emit = defineEmits<{
   pointer-events: none;
 
   color: #a5c814;
-  font-family: Goldman;
   font-size: 100px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
+}
+
+.highscore-hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 68px));
+  margin: 0;
+  z-index: 5;
+  pointer-events: none;
+
+  color: #ffffff;
+  font-size: 30px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .intro-copy {
@@ -139,7 +157,7 @@ const emit = defineEmits<{
   border-radius: 50%;
 }
 
-.timer-overlay strong {
+.timer-overlay p {
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }

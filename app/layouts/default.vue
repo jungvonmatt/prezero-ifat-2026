@@ -10,13 +10,18 @@
       <slot />
       <footer class="footer">
         <nav>
-          <NuxtLink to="/info">How it works</NuxtLink>
-          <NuxtLink to="/admin">Admin</NuxtLink>
+          <NuxtLink v-if="isAdminRoute" to="/">Back to game</NuxtLink>
+          <NuxtLink v-else to="/admin">Admin</NuxtLink>
         </nav>
       </footer>
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+const route = useRoute();
+const isAdminRoute = computed(() => route.path === "/admin");
+</script>
 
 <style scoped lang="scss">
 .site-header {

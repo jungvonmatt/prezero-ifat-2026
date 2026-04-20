@@ -46,11 +46,7 @@ function onInput(event: Event) {
   padding: 12px 16px;
 
   color: #fff;
-  font-family: Goldman;
   font-size: 40px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
 
   background-color: transparent;
 

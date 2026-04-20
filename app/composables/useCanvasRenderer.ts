@@ -1,17 +1,16 @@
-import { ref, type ComponentPublicInstance, type Ref } from "vue";
+import { ref, type ComponentPublicInstance } from "vue";
 import { clamp } from "./useCircleScoring";
 import { getCssVar } from "./getCssVar";
 import type { Point } from "./useCircleScoring";
-import type { DrawContext, StrokeMode, StrokePoint } from "./useStrokeProfiles";
+import type { DrawContext, StrokePoint } from "./useStrokeRenderer";
 
 interface UseCanvasRendererOptions {
   getPoints: () => StrokePoint[];
   getIsDrawing: () => boolean;
   getRoundStartAt: () => number | null;
-  selectedStrokeMode: Ref<StrokeMode>;
   guideRadiusFactor: number;
   guideFadeOutMs: number;
-  drawStroke: (ctx: CanvasRenderingContext2D, points: StrokePoint[], mode: StrokeMode, drawContext: DrawContext) => void;
+  drawStroke: (ctx: CanvasRenderingContext2D, points: StrokePoint[], drawContext: DrawContext) => void;
 }
 
 export function useCanvasRenderer(options: UseCanvasRendererOptions) {
@@ -87,7 +86,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
         centerY,
         targetRadius,
       };
-      options.drawStroke(ctx, points, options.selectedStrokeMode.value, drawContext);
+      options.drawStroke(ctx, points, drawContext);
     }
   }
 
