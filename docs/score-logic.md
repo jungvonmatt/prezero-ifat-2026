@@ -67,53 +67,6 @@ index.vue
   -> CmSave
 ```
 
-## Architekturdiagramm (Mermaid)
-
-```mermaid
-flowchart TD
-  IDX[index.vue]
-
-  SUBGRAPH_UI[UI-Komponenten]
-    CMD[CmDraw.vue]
-    CMH[CmHighscore.vue]
-    CMS[CmSave.vue]
-  end
-
-  SUBGRAPH_GAME[Spiel-Composables]
-    UCG[useCircleGame.ts]
-    UCR[useCanvasRenderer.ts]
-    URL[useRoundLifecycle.ts]
-    UCS[useCircleScoring.ts]
-    UGS[useGameSettings.ts]
-    USP[useStrokeProfiles.ts]
-  end
-
-  SUBGRAPH_DATA[Daten-Composable]
-    UHS[useHighscores.ts]
-  end
-
-  API[/api/highscores]
-  LS[(localStorage)]
-
-  IDX --> UCG
-  IDX --> UHS
-  IDX --> CMD
-  IDX --> CMH
-  IDX --> CMS
-
-  UCG --> UCR
-  UCG --> URL
-  UCG --> UCS
-  UCG --> UGS
-  UCG --> USP
-
-  UHS --> API
-  UHS --> LS
-
-  UCG -. stellt Werte/Events bereit .-> IDX
-  UHS -. stellt Daten/Actions bereit .-> IDX
-```
-
 ## Verantwortung pro Baustein
 
 ### useCircleGame
