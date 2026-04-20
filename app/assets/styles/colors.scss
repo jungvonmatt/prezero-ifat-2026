@@ -1,8 +1,3 @@
-$core-color-primary-base: #0069b4;
-$core-color-primary-dark: #005897;
-$core-color-secondary-base: #a5c814;
-$core-color-tertiary-background: #f5f7f7;
-$core-color-tertiary-lighter: #d6dee0;
 $core-color-tertiary-base: #00343d;
 $core-color-tertiary-darker: #002329;
 
@@ -10,9 +5,7 @@ $core-color-bg: #013c4a;
 $core-color-green: #A5C814;
 $core-color-dark: #16424A;
 $core-color-white-soft: #fdfdfd;
+$core-color-white: #ffffff;
 
 
-$surface: color-mix(in srgb, #{$core-color-tertiary-background} 82%, white 18%);
-$ink: $core-color-tertiary-base;
-$muted: color-mix(in srgb, #{$core-color-tertiary-base} 62%, white 38%);
-$line: color-mix(in srgb, #{$core-color-tertiary-lighter} 70%, #{$core-color-tertiary-base} 30%);
+$muted: color-mix(in srgb, #{$core-color-white} 62%, white 38%);

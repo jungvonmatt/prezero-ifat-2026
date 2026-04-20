@@ -226,7 +226,7 @@ h2 {
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 10px;
-  border-top: 1px solid variables.$line;
+  border-top: 1px solid variables.$core-color-white-soft;
   padding: 10px 0;
 }
 
@@ -255,7 +255,7 @@ h2 {
 }
 
 .mode-picker select {
-  border: 1px solid variables.$line;
+  border: 1px solid variables.$core-color-white-soft;
   border-radius: 4px;
   padding: 10px 40px 10px 12px;
   font: inherit;
@@ -271,7 +271,7 @@ h2 {
 }
 
 .delete-x {
-  border: 1px solid variables.$line;
+  border: 1px solid variables.$core-color-white-soft;
   background: #fff;
   color: #8d1c1c;
   width: 30px;

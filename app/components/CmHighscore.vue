@@ -33,14 +33,9 @@ defineProps<{
 <style scoped lang="scss">
 @use "~/assets/styles/colors" as variables;
 
-// .highscore-header {
-//   margin-top: -40px;
-//   margin-bottom: 8px;
-// }
-
 .highscore-list-wrap {
   position: relative;
-  height: 25dvh;
+  height: 50dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -51,7 +46,7 @@ defineProps<{
   content: "";
   position: absolute;
   left: 0;
-  right: 18px;
+  right: 0px;
   height: 18px;
   pointer-events: none;
   z-index: 1;
@@ -100,7 +95,7 @@ defineProps<{
   border-radius: 10px 0 10px 10px;
   border: 1px solid rgba(255, 255, 255, 0.3);
 
-  margin-bottom: 20px;
+  margin: 12px 0;
 
   &:hover {
     border-color: rgba(255, 255, 255, 1);
@@ -111,18 +106,13 @@ defineProps<{
   }
 }
 
-.highscore-list li:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-
 .local-badge {
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: variables.$muted;
-  background: variables.$line;
+  background: variables.$core-color-white-soft;
   padding: 2px 7px;
   border-radius: 999px;
   white-space: nowrap;

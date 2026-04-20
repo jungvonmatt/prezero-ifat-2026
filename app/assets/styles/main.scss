@@ -14,7 +14,7 @@ body,
 }
 
 body {
-  color: variables.$ink;
+  color: variables.$core-color-white;
   font-family: "Arial Narrow", "Arial Nova Cond", "Liberation Sans Narrow", Arial, sans-serif;
   background: variables.$core-color-bg;
 }
@@ -51,7 +51,7 @@ a {
 }
 
 .footer a:hover {
-  border-color: variables.$core-color-primary-dark;
+  border-color: variables.$core-color-dark;
 }
 
 .brand {
@@ -125,7 +125,7 @@ h1 {
 }
 
 .btn.secondary {
-  // background: variables.$core-color-secondary-base;
+  // background: variables.$core-color-green;
   // color: variables.$core-color-tertiary-darker;
 }
 
