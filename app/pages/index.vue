@@ -9,7 +9,7 @@
             <button class="btn" @click="startGame">Los geht's!</button>
           </div>
         </Transition>
-        <!-- <Transition name="timer">
+        <Transition name="timer">
           <div v-if="isDrawing && !result" class="timer-overlay" :class="{ warning: roundTimeLeftMs <= 3000 }">
             <svg class="timer-ring" viewBox="0 0 100 100" aria-hidden="true">
               <circle class="timer-ring-track" cx="50" cy="50" r="42" />
@@ -19,50 +19,21 @@
               <strong class="timer-caption">{{ timerText }}</strong>
             </div>
           </div>
-        </Transition> -->
+        </Transition>
         <strong v-if="isDrawing || result" class="score-display">{{ scoreDisplayText }}</strong>
-        <div v-if="result" class="controls">
-          <!-- <span class="controls-label">{{ result.label }}</span> -->
-          <!-- <button class="btn" @click="resetRound">Neustart</button> -->
-        </div>
       </div>
     </section>
 
     <aside class="sidebar">
       <!-- <section class="hero">
         <div class="stats">
-          <strong>{{ scoreText }}%</strong>
           <span v-if="result">{{ result.label }}</span>
           <span v-else class="muted">Round not finished yet</span>
         </div>
       </section> -->
 
-      <!-- <article>
-        <h2>Save your score</h2>
-        <form class="save-form" @submit.prevent="saveScore">
-          <input v-model="playerName" placeholder="Your name" maxlength="24" :disabled="!result || isSaving" />
-          <button class="btn secondary" :disabled="!result || isSaving">
-            {{ isSaving ? "Saving..." : "Save score" }}
-          </button>
-        </form>
-      </article> -->
-
-      <article>
-        <div class="highscore-header">
-          <h2>Scores</h2>
-          <span v-if="isLocalMode" class="local-badge">Lokal gespeichert</span>
-        </div>
-        <div v-if="highscores.length" class="highscore-list-wrap">
-          <ol class="highscore-list">
-            <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
-              <span>#{{ index + 1 }}</span>
-              <!-- <strong>{{ entry.name }}</strong> -->
-              <span>{{ entry.score.toFixed(1) }}%</span>
-            </li>
-          </ol>
-        </div>
-        <p v-else class="muted">No highscores yet.</p>
-      </article>
+      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" />
+      <CmSave :player-name="playerName" :can-submit="Boolean(result)" :is-saving="isSaving" @update:player-name="playerName = $event" @submit="saveScore" />
 
       <button v-if="result" class="btn restart" @click="resetRound">Neustart</button>
     </aside>
@@ -691,6 +662,10 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 @use "~/assets/styles/colors" as variables;
 
+article {
+  width: 100%;
+}
+
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -726,20 +701,6 @@ onBeforeUnmount(() => {
   background: #fff;
 }
 
-.controls {
-  position: absolute;
-  left: 50%;
-  top: calc(50% + 64px);
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  z-index: 2;
-  text-align: center;
-}
-
 .score-display {
   position: absolute;
   left: 50%;
@@ -755,13 +716,6 @@ onBeforeUnmount(() => {
   line-height: normal;
 }
 
-.controls-label {
-  max-width: 240px;
-  font-size: 0.85rem;
-  line-height: 1.2;
-  color: color-mix(in srgb, #ffffff 88%, #{variables.$core-color-tertiary-base});
-}
-
 .intro-copy {
   display: flex;
   flex-direction: column;
@@ -774,7 +728,6 @@ onBeforeUnmount(() => {
   transform: translate(-50%, -50%);
   color: variables.$core-color-white-soft;
   text-align: center;
-  // font-family: "Roboto Condensed";
   font-size: 48px;
   font-style: normal;
   font-weight: 400;
@@ -873,162 +826,12 @@ onBeforeUnmount(() => {
 }
 
 .sidebar {
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: center;
-  gap: 16px;
-  min-height: 0;
-  padding: 0;
-}
-
-.hero {
-  padding: clamp(14px, 2vw, 22px);
-  flex-shrink: 0;
-}
-
-.stats {
-  display: flex;
-  flex-direction: column;
-  margin-top: 12px;
-}
-
-.stats p {
-  margin: 0;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: variables.$muted;
-}
-
-.stats strong {
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1;
-}
-
-.save-form {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.save-form input {
-  flex: 1;
-  border: 1px solid variables.$line;
-  border-radius: 4px;
-  padding: 10px 12px;
-  font: inherit;
-}
-
-.highscore-header {
-  margin-top: -40px;
-  margin-bottom: 8px;;
-}
-
-.highscore-list-wrap {
-  position: relative;
-  height: 25dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.highscore-list-wrap::before,
-.highscore-list-wrap::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 18px;
-  height: 18px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.highscore-list-wrap::before {
-  top: 0;
-  background: linear-gradient(to bottom, #{variables.$core-color-bg}, transparent);
-}
-
-.highscore-list-wrap::after {
-  bottom: 0;
-  background: linear-gradient(to top, #{variables.$core-color-bg}, transparent);
-}
-
-.highscore-list {
-  margin: 0;
-  padding: 18px 18px 18px 0;
-  list-style: none;
-  flex: 1;
-  height: 100%;
-  overflow-y: scroll;
-  min-height: 0;
-  // Vorherige Variante (sichtbare Scrollbar):
-  // scrollbar-gutter: stable;
-  // scrollbar-width: thin;
-  // scrollbar-color: variables.$line transparent;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.highscore-list::-webkit-scrollbar {
-  // Vorherige Variante (sichtbare Scrollbar):
-  // width: 6px;
-  width: 0;
-  height: 0;
-}
-
-// .highscore-list::-webkit-scrollbar-track {
-//   background: transparent;
-// }
-
-// .highscore-list::-webkit-scrollbar-thumb {
-//   background: variables.$line;
-//   border-radius: 999px;
-// }
-
-// .highscore-list::-webkit-scrollbar-thumb:hover {
-//   background: variables.$muted;
-// }
-
-.highscore-list li {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-
-  color: #fff;
-  font-family: Goldman;
-  font-size: 40px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-}
-
-.highscore-list li:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-
-.restart {
-  position: absolute;
-  bottom: 48px;
-}
-
-.local-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: variables.$muted;
-  background: variables.$line;
-  padding: 2px 7px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.admin-link {
-  margin-top: 14px;
-  display: inline-flex;
+  padding: 0;
 }
 
 @media (max-width: 860px) {
@@ -1043,10 +846,6 @@ onBeforeUnmount(() => {
   .canvas-wrap {
     height: min(80vw, 480px);
     flex: none;
-  }
-
-  .save-form {
-    flex-direction: column;
   }
 }
 </style>

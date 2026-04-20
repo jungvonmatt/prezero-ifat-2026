@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "name": "Anonymous",
+      "score": 96.12,
+      "createdAt": "2026-04-20T09:31:43.884Z"
+    },
+    {
+      "name": "Testi",
+      "score": 94.31,
+      "createdAt": "2026-04-20T09:58:31.231Z"
+    },
+    {
+      "name": "Yeahhhh",
+      "score": 91.45,
+      "createdAt": "2026-04-20T09:37:46.712Z"
+    },
+    {
       "name": "s",
       "score": 90.4,
       "createdAt": "2026-04-16T14:40:20.447Z"
@@ -34,21 +49,6 @@
       "name": "Steffi",
       "score": 81.81,
       "createdAt": "2026-04-14T12:30:11.675Z"
-    },
-    {
-      "name": "z",
-      "score": 80.66,
-      "createdAt": "2026-04-16T14:33:35.076Z"
-    },
-    {
-      "name": "Steffi",
-      "score": 74.01,
-      "createdAt": "2026-04-09T13:37:09.941Z"
-    },
-    {
-      "name": "z",
-      "score": 39.92,
-      "createdAt": "2026-04-14T12:36:17.987Z"
     }
   ]
 }
