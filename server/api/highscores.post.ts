@@ -1,7 +1,6 @@
 import { addHighscore } from '../utils/highscores'
 
 interface HighscorePayload {
-  name?: string
   score?: number
 }
 

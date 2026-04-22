@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue";
 import type { Point, RoundResult } from "./useCircleScoring";
-import { clamp, normalizeAngleDelta } from "./useCircleScoring";
+import { clamp, normalizeAngleDelta, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT } from "./useCircleScoring";
 import type { StrokePoint } from "./useStrokeRenderer";
 
 interface UseRoundLifecycleOptions {
@@ -87,7 +87,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
 
     result.value = {
       score: 0,
-      label: "Direction changed: keep one continuous direction",
+      label: ERROR_LABEL_DIRECTION(),
       radialError: 1,
       radiusFitError: 1,
       closureError: 1,
@@ -111,7 +111,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
 
     result.value = {
       score: 0,
-      label: "Time exceeded: draw the circle faster",
+      label: ERROR_LABEL_TIMEOUT(),
       radialError: 1,
       radiusFitError: 1,
       closureError: 1,

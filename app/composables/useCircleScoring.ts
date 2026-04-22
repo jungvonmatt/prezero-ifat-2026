@@ -1,4 +1,7 @@
 import type { StrokePoint } from "./useStrokeRenderer";
+import { useLocale } from "./useLocale";
+
+const { t } = useLocale();
 
 export interface Point {
   x: number;
@@ -19,6 +22,11 @@ export interface RoundResult {
   coverageDegrees: number;
 }
 
+export interface StrokeCompletionMetrics {
+  closureError: number;
+  coverageDegrees: number;
+}
+
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -29,13 +37,18 @@ export function normalizeAngleDelta(delta: number) {
   return delta;
 }
 
+export const ERROR_LABEL_INVALID_FORM = () => t("errors.invalidForm");
+export const ERROR_LABEL_CLOSURE = () => t("errors.closure");
+export const ERROR_LABEL_DIRECTION = () => t("errors.direction");
+export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout");
+
 export function getLabel(score: number) {
-  if (score >= 98) return "Almost machine-perfect";
-  if (score >= 92) return "Exceptionally round";
-  if (score >= 82) return "Very solid circle";
-  if (score >= 70) return "Pretty good";
-  if (score >= 55) return "Getting there";
-  return "Needs more practice";
+  if (score >= 98) return t("score.label98");
+  if (score >= 92) return t("score.label92");
+  if (score >= 82) return t("score.label82");
+  if (score >= 70) return t("score.label70");
+  if (score >= 55) return t("score.label55");
+  return t("score.label0");
 }
 
 function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
@@ -63,6 +76,42 @@ function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
   return filteredPoints;
 }
 
+export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logicalSize: number, guideRadiusFactor: number): StrokeCompletionMetrics | null {
+  if (logicalSize <= 0) return null;
+
+  const rawPoints = getScoringPoints(rawStrokePoints);
+  if (rawPoints.length < 4) return null;
+
+  const guideCenterX = logicalSize / 2;
+  const guideCenterY = logicalSize / 2;
+  const targetRadius = logicalSize * guideRadiusFactor;
+  const first = rawPoints[0];
+  const last = rawPoints[rawPoints.length - 1];
+
+  if (!first || !last || targetRadius <= 0) return null;
+
+  const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
+  const closureError = closureGap / Math.max(targetRadius, 0.0001);
+
+  let signedCoverage = 0;
+  for (let index = 1; index < rawPoints.length; index += 1) {
+    const prev = rawPoints[index - 1];
+    const current = rawPoints[index];
+    if (!prev || !current) continue;
+
+    const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
+    const currentAngle = Math.atan2(current.y - guideCenterY, current.x - guideCenterX);
+    signedCoverage += normalizeAngleDelta(currentAngle - prevAngle);
+  }
+
+  const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
+
+  return {
+    closureError,
+    coverageDegrees,
+  };
+}
+
 export function calculateLiveScore(rawStrokePoints: StrokePoint[], logicalSize: number, guideRadiusFactor: number, closureWeightBase = 0.1): number | null {
   if (logicalSize <= 0) return null;
 
@@ -88,25 +137,10 @@ export function calculateLiveScore(rawStrokePoints: StrokePoint[], logicalSize: 
     }, 0) / distances.length;
   const radialError = Math.sqrt(variance) / Math.max(targetRadius, 0.0001);
 
-  const first = rawPoints[0];
-  const last = rawPoints[rawPoints.length - 1];
-  if (!first || !last) return null;
+  const completionMetrics = getStrokeCompletionMetrics(rawStrokePoints, logicalSize, guideRadiusFactor);
+  if (!completionMetrics) return null;
 
-  const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
-  const closureError = closureGap / Math.max(targetRadius, 0.0001);
-
-  let signedCoverage = 0;
-  for (let index = 1; index < rawPoints.length; index += 1) {
-    const prev = rawPoints[index - 1];
-    const current = rawPoints[index];
-    if (!prev || !current) continue;
-
-    const prevAngle = Math.atan2(prev.y - guideCenterY, prev.x - guideCenterX);
-    const currentAngle = Math.atan2(current.y - guideCenterY, current.x - guideCenterX);
-    signedCoverage += normalizeAngleDelta(currentAngle - prevAngle);
-  }
-
-  const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
+  const { closureError, coverageDegrees } = completionMetrics;
   const coverageProgress = clamp(coverageDegrees / 360, 0, 1);
   const closureWeight = closureWeightBase * coverageProgress * coverageProgress;
 

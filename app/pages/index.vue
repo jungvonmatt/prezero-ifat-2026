@@ -1,12 +1,33 @@
 <template>
   <div class="game-grid">
+    <div v-if="showLanguageGate" class="language-gate" @pointerdown="handleGateTouch">
+      <div class="language-gate-content">
+
+        <!-- Tap to start -->
+        <div v-if="!hasTouchedGate" class="tap-actions">
+          <img class="language-gate-logo" src="/logo.svg" alt="PreZero" />
+          <p class="language-gate-title">Tap to start</p>
+        </div>
+
+        <!-- Language selection buttons -->
+        <div v-if="hasTouchedGate" class="language-gate-actions">
+          <button class="btn language-btn" @click.stop="selectLanguage('de')">Deutsch</button>
+          <button class="btn language-btn" @click.stop="selectLanguage('en')">English</button>
+        </div>
+      </div>
+    </div>
+
     <CmDraw
+      :class="{ 'game-content-hidden': showLanguageGate }"
       :set-canvas-wrap-el="setCanvasWrapEl"
       :set-canvas-el="setCanvasEl"
       :has-started="hasStarted"
       :is-drawing="isDrawing"
       :has-result="hasResult"
+      :result-score="result?.score ?? null"
+      :show-result-label="showResultLabel"
       :is-new-highscore="isNewHighscore"
+      :result-label="result?.label || ''"
       :score-display-text="scoreDisplayText"
       :round-time-left-ms="roundTimeLeftMs"
       :timer-text="timerText"
@@ -16,21 +37,11 @@
       @move-round="moveRound"
       @end-round="endRound"
     />
-
-    <aside class="sidebar">
-      <!-- <section class="hero">
-        <div class="stats">
-          <span v-if="result">{{ result.label }}</span>
-          <span v-else class="muted">Round not finished yet</span>
-        </div>
-      </section> -->
-
-      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" />
-
-      <div class="sidebar-save-and-restart" v-if="result" >
-        <CmSave :player-name="playerName" :can-submit="Boolean(result)" :is-saving="isSaving" @update:player-name="playerName = $event" @submit="saveScore" />
-        <button class="btn restart" @click="resetRound">Neustart</button>
-      </div>
+    <aside v-if="!showLanguageGate && Boolean(result)" class="sidebar">
+      <h2>{{ t("highscores.title") }}</h2>
+      <span v-if="isLocalMode" class="local-badge">{{ t("highscores.localBadge") }}</span>
+      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" :latest-saved-score="latestSavedScore" />
+      <button class="btn restart" @click="resetRound">{{ t("game.restart") }}</button>
     </aside>
   </div>
 </template>
@@ -38,12 +49,25 @@
 <script setup lang="ts">
 import { useCircleGame } from "../composables/useCircleGame";
 import { useHighscores } from "../composables/useHighscores";
+import type { Locale } from "../composables/useLocale";
+import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT } from "../composables/useCircleScoring";
+import { useLocale } from "../composables/useLocale";
 
 const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLeftMs, hasResult, scoreDisplayText, timerText, timerDashoffset, startGame, startRound, moveRound, endRound, resetRound: resetGameRound } = useCircleGame();
 
-const { highscores, playerName, isSaving, isLocalMode, saveScore } = useHighscores({ result });
+const { highscores, isSaving, isLocalMode, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({ result });
+const { t, setLocale } = useLocale();
+
+const showLanguageGate = ref(true);
+const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
+
+const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT()]));
 
 const isNewHighscore = ref(false);
+const showResultLabel = computed(() => {
+  const label = result.value?.label;
+  return Boolean(label && RESULT_ERROR_LABELS.value.has(label));
+});
 
 watch(result, (nextResult) => {
   if (!nextResult) {
@@ -56,54 +80,141 @@ watch(result, (nextResult) => {
   }, Number.NEGATIVE_INFINITY);
 
   isNewHighscore.value = nextResult.score > bestExistingScore;
+
+  if (!RESULT_ERROR_LABELS.value.has(nextResult.label) && !isSaving.value) {
+    // Save successful rounds automatically without user input.
+    void saveScore();
+  }
 });
 
 function resetRound() {
   resetGameRound();
-  playerName.value = "";
+  resetLatestSavedScore();
+}
+
+function handleGateTouch() {
+  if (hasTouchedGate.value) return;
+  hasTouchedGate.value = true;
+}
+
+function selectLanguage(locale: Locale) {
+  setLocale(locale);
+  showLanguageGate.value = false;
 }
 </script>
 
 <style scoped lang="scss">
+@use "~/assets/styles/colors" as variables;
+@use "~/assets/styles/fonts" as fonts;
+
 article {
   width: 100%;
 }
 
 .game-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 48px;
-  flex: 1;
-  min-height: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-.sidebar-save-and-restart {
+.game-content-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+
+.tap-actions {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  margin-top: 10px;
+  align-items: center;
+  gap: 80px;
+} 
+
+.language-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 250;
+
+  display: grid;
+  place-items: center;
+
+}
+
+.language-gate-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 26px;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.language-gate-logo {
+  width: 480px;
+  height: auto;
+}
+
+.language-gate-title {
+  color: variables.$color-off-white;
+  font-family: fonts.$font-secondary-regular;
+  font-size: 56px;
+  line-height: 1;
+}
+
+.language-gate-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.language-btn {
+  min-width: 190px;
 }
 
 .sidebar {
-  z-index: 100;
+  position: absolute;
 
-  margin-top: 15vh;
-  display: flex;
+  right: 0;
+  top: 0;
+
+  width: 548px;
+  height: 100%;
+
+  z-index: 100;
+  background-color: variables.$color-petrol-light;
+
+  padding: 64px 40px;
+
+  display: inline-flex;
   flex-direction: column;
-  align-items: flex-end;
   justify-content: space-between;
 
-  padding: 0;
-}
-
-@media (max-width: 860px) {
-  .game-grid {
-    position: relative;
-    grid-template-columns: 1fr;
-    overflow-y: auto;
-    flex: none;
-    padding-bottom: 32px;
+  .btn {
+    width: 100%;
   }
 }
+
+// .sidebar-save-and-restart {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: flex-end;
+//   gap: 10px;
+//   margin-top: 10px;
+// }
+
+// @media (max-width: 860px) {
+//   .sidebar {
+//     position: static;
+//     width: 100%;
+//     margin-top: 24px;
+//     align-items: stretch;
+//   }
+
+//   .sidebar-save-and-restart {
+//     align-items: stretch;
+//   }
+// }
 </style>

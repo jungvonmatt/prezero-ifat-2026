@@ -67,12 +67,12 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
         ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
         : 1;
 
-    ctx.strokeStyle = getCssVar("--core-color-stroke", "#a5c814");
+    ctx.strokeStyle = getCssVar("--color-off-white", "#f0f0f0");
 
     ctx.save();
     ctx.globalAlpha = guideOpacity;
     ctx.lineWidth = 1;
-    ctx.setLineDash([22, 22]);
+    ctx.setLineDash([40, 40]);
     ctx.beginPath();
     ctx.arc(centerX, centerY, targetRadius, 0, Math.PI * 2);
     ctx.stroke();

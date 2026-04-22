@@ -5,18 +5,23 @@
 
       <Transition name="fade">
         <div v-if="!hasStarted" class="intro-copy">
-          <span>Zeichne den<br />perfekten Kreis!</span>
-          <button class="btn" @click="emit('start-game')">Los geht's!</button>
+          <span v-html="t('game.intro').replace('\n', '<br />')"></span>
+          <button class="btn" @click="emit('start-game')">{{ t("game.start") }}</button>
         </div>
       </Transition>
 
-      <p v-if="isDrawing || hasResult" class="score-display">{{ scoreDisplayText }}</p>
+      <div class="score-container">
+        <Transition name="fade">
+          <p v-if="isDrawing || (hasResult && !showResultLabel)" class="score-display" :class="{ 'has-result': hasResult }">{{ scoreDisplayText }}</p>
+        </Transition>
+        <Transition name="fade">
+          <p v-if="hasResult && isNewHighscore" class="highscore-hint">{{ t("game.highscore") }}</p>
+        </Transition>
+      </div>
 
-      <Transition name="fade">
-        <p v-if="hasResult && isNewHighscore" class="highscore-hint">Highscore!</p>
-      </Transition>
+      <p v-if="hasResult && showResultLabel" class="result-label">{{ resultLabel }}</p>
 
-      <CmConfettiRain :active="hasResult" />
+      <CmConfettiRain :active="shouldShowConfetti" />
 
       <Transition name="timer">
         <div v-if="isDrawing && !hasResult" class="timer-overlay" :class="{ warning: roundTimeLeftMs <= 3000 }">
@@ -34,20 +39,31 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import type { ComponentPublicInstance } from "vue";
+import { useLocale } from "~/composables/useLocale";
 
-defineProps<{
+const { t } = useLocale();
+
+const props = defineProps<{
   setCanvasWrapEl: (value: Element | ComponentPublicInstance | null) => void;
   setCanvasEl: (value: Element | ComponentPublicInstance | null) => void;
   hasStarted: boolean;
   isDrawing: boolean;
   hasResult: boolean;
+  resultScore: number | null;
+  showResultLabel: boolean;
   isNewHighscore: boolean;
+  resultLabel: string;
   scoreDisplayText: string;
   roundTimeLeftMs: number;
   timerText: string;
   timerDashoffset: string;
 }>();
+
+const shouldShowConfetti = computed(() => {
+  return props.hasResult && !props.showResultLabel && (props.resultScore ?? 0) >= 90;
+});
 
 const emit = defineEmits<{
   (event: "start-game"): void;
@@ -59,11 +75,15 @@ const emit = defineEmits<{
 
 <style scoped lang="scss">
 @use "~/assets/styles/colors" as variables;
+@use "~/assets/styles/fonts" as fonts;
 
 .playground {
   display: flex;
   flex-direction: column;
   min-height: 0;
+
+  width: 100%;
+  height: 100%;
 }
 
 .canvas-wrap {
@@ -88,54 +108,82 @@ const emit = defineEmits<{
 }
 
 .score-display {
-  position: absolute;
-
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-
-  margin-top: -16px;
+  position: relative;
 
   z-index: 3;
 
   pointer-events: none;
 
-  color: #a5c814;
-  font-size: 100px;
+  color: variables.$color-off-white;
+  font-size: 130px;
+  line-height: 1;
+
+  &.has-result {
+    color: variables.$color-bright-green;
+  }
 }
 
-.highscore-hint {
+.result-label {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, calc(-50% + 68px));
-  margin: 0;
-  z-index: 5;
+  transform: translate(-50%, calc(-50% + 8px));
+
+  z-index: 4;
+
   pointer-events: none;
 
   color: #ffffff;
-  font-size: 30px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 28px;
+  text-align: center;
+}
+
+.highscore-hint {
+  position: relative;
+  
+  z-index: 5;
+
+  pointer-events: none;
+
+  color: variables.$color-off-white;
+  @include fonts.font-secondary-semibold;
+  font-size: 65px;
+  line-height: 1;
+}
+
+.score-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+
+  z-index: 3;
+
+  pointer-events: none;
 }
 
 .intro-copy {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 60px;
 
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  color: variables.$core-color-white;
+
+  color: variables.$color-off-white;
   text-align: center;
-  font-size: 48px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 1px;
+  @include fonts.font-secondary-regular;
+  font-size: 80px;
+  line-height: 105%;
+
   z-index: 3;
 }
 
@@ -189,11 +237,11 @@ const emit = defineEmits<{
 }
 
 .timer-ring-track {
-  stroke: variables.$core-color-white;
+  stroke: variables.$color-off-white;
 }
 
 .timer-ring-progress {
-  stroke: variables.$core-color-green;
+  stroke: variables.$color-bright-green;
   stroke-linecap: round;
   stroke-dasharray: 263.89378290154264;
   transition: stroke 0.2s ease;

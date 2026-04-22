@@ -1,51 +1,46 @@
 # Circle Game: Architektur, Verdrahtung und Score-Logik
 
-Stand: 20.04.2026
+Stand: 22.04.2026
 
 ## Zweck dieser Datei
 
-Diese Datei dokumentiert die aktuelle Aufteilung des Circle-Games in Komponenten und Composables.
-
-Wichtig: Die alte Logik lebte weitgehend in der Page. Das ist nicht mehr der Fall.
-Die aktuelle Struktur ist modular aufgebaut:
-
-1. UI in Komponenten
-2. Spiellogik in Composables
-3. Datenlogik in einem separaten Highscore-Composable
-4. Page als duenne Orchestrierung
+Diese Datei dokumentiert den aktuellen Ist-Zustand von Spielablauf, Scoring und Highscore-Speicherung.
+Sie ist auf den aktuellen Code in app/composables, app/components, app/pages und server/utils abgestimmt.
 
 ## Aktuelle Gesamtstruktur
 
 ### Komponenten
 
 - app/components/CmDraw.vue
-  Rendern von Canvas, Intro-Overlay, Timer-Overlay und Live-Score
+  Canvas, Intro, Live-Score, Timer, Ergebnislabel, Highscore-Hinweis
 - app/components/CmHighscore.vue
-  Anzeige der Score-Liste
-- app/components/CmSave.vue
-  Eingabe und Submit fuer den Spielernamen
+  Top-3-Visualisierung, Liste, Ranking-Hinweis
+- app/components/CmConfettiRain.vue
+  Konfetti bei erfolgreicher Runde
+
+Hinweis: CmSave.vue existiert nicht mehr. Speichern erfolgt automatisch und anonym.
 
 ### Composables
 
 - app/composables/useCircleGame.ts
-  Oberflaeche fuer das komplette Zeichenspiel
+  Oberflaeche fuer das komplette Zeichenspiel, Verdrahtung von Rendering, Lifecycle und Scoring
 - app/composables/useCanvasRenderer.ts
-  Canvas-Refs, Canvas-Sizing, Redraw, Pointer-Koordinaten
+  Canvas-Refs, Sizing, Redraw, Pointer-Koordinaten
 - app/composables/useRoundLifecycle.ts
-  Round-State, Timer, Pointer-Fluss, Richtungserkennung, Reset
+  Rundenzustand, Timer, Pointer-Flow, Richtungswechsel-Abbruch
 - app/composables/useCircleScoring.ts
-  Reine Scoring- und Geometrie-Helfer
-- app/composables/useHighscores.ts
-  Laden und Speichern der Highscores inkl. LocalStorage-Fallback
-- app/composables/useGameSettings.ts
-  Auswahl und Persistenz des Stroke-Modus
-- app/composables/useStrokeProfiles.ts
+  Score- und Geometrie-Logik inkl. i18n-Label-Funktionen
+- app/composables/useStrokeRenderer.ts
   Visuelles Renderverhalten des Strichs
+- app/composables/useHighscores.ts
+  Laden/Speichern der Highscores inkl. API-First und LocalStorage-Fallback
+- app/composables/useLocale.ts
+  Leichtgewichtiges i18n (de/en, t(path, params))
 
 ### Page
 
 - app/pages/index.vue
-  Verbindet CmDraw, CmHighscore und CmSave mit useCircleGame und useHighscores
+  Duenne Orchestrierung zwischen Draw, Highscore, Game-Logic, Highscore-Logic und Locale
 
 ## Datenfluss auf hoher Ebene
 
@@ -55,26 +50,25 @@ index.vue
     -> useCanvasRenderer()
     -> useRoundLifecycle()
     -> useCircleScoring()
-    -> useGameSettings()
-    -> useStrokeProfiles()
+    -> useStrokeRenderer()
 
 index.vue
   -> useHighscores(result)
 
 index.vue
+  -> useLocale()
+
+index.vue
   -> CmDraw
   -> CmHighscore
-  -> CmSave
+  -> CmConfettiRain (in CmDraw)
 ```
 
-## Verantwortung pro Baustein
+## Verantwortungen pro Baustein
 
 ### useCircleGame
 
-useCircleGame ist das uebergeordnete Game-Composable.
-Es versteckt die interne Verdrahtung zwischen Renderer, Round-Lifecycle und Scoring.
-
-Es liefert nach aussen nur die Werte und Aktionen, die die Page wirklich braucht:
+useCircleGame ist die zentrale Spielfassade und liefert nur die Werte/Aktionen, die die Page braucht:
 
 - setCanvasWrapEl
 - setCanvasEl
@@ -92,208 +86,93 @@ Es liefert nach aussen nur die Werte und Aktionen, die die Page wirklich braucht
 - resetRound
 - result
 
-Ziel: Die Page muss nicht mehr wissen, wie Canvas, Timer und Score intern zusammenhaengen.
+Interne Aufgabe: createRoundResult(), Redraw-Verdrahtung, Timer-Konfiguration und Scoring-Einbindung.
 
 ### useCanvasRenderer
 
 Aufgabe:
 
 - Canvas-Refs verwalten
-- Canvas-Groesse berechnen
-- DPR beruecksichtigen
+- Canvas-Groesse und DPR beruecksichtigen
 - Hintergrund und Guide rendern
 - Stroke rendern
-- Pointer-Position in Canvas-Koordinaten umrechnen
-
-Wichtige Inputs:
-
-- aktuelle Punkte
-- isDrawing
-- roundStartAt
-- selectedStrokeMode
-- drawStroke aus useStrokeProfiles
-
-Wichtige Outputs:
-
-- setCanvasWrapEl
-- setCanvasEl
-- configureCanvas
-- redraw
-- pointFromPointer
-- logicalSize
+- Pointer in Canvas-Koordinaten umrechnen
 
 ### useRoundLifecycle
 
 Aufgabe:
 
-- State der aktuellen Runde halten
-- Timer und Timeout verwalten
-- Pointer-Capture kontrollieren
-- Richtungswechsel erkennen
-- Runde starten, bewegen, beenden, abbrechen und resetten
-
-Wichtige Outputs:
-
-- points
-- isDrawing
-- result
-- hasStarted
-- roundStartAt
-- roundTimeLeftMs
-- startGame
-- startRound
-- moveRound
-- endRound
-- resetRound
+- Rundenzustand und Punkteliste halten
+- Timeout und Tick-Timer steuern
+- Pointer-Capture setzen/loesen
+- Richtungswechsel erkennen und Runde abbrechen
+- Runde starten/bewegen/beenden/resetten
 
 ### useCircleScoring
 
 Aufgabe:
 
-- reine mathematische und fachliche Logik
-- keine DOM-Logik
-- kein Canvas-Zugriff
-- kein Vue-Lifecycle
+- reine Bewertungs- und Geometrie-Logik
+- Fehlerlabels als i18n-Funktionen exportieren
+- Score-Label-Mapping via getLabel(score)
 
-Aktuell enthalten:
+Wichtige Exporte:
 
-- Point
-- RoundResult
-- clamp
-- normalizeAngleDelta
-- getLabel
 - calculateLiveScore
+- getStrokeCompletionMetrics
+- ERROR_LABEL_INVALID_FORM
+- ERROR_LABEL_CLOSURE
+- ERROR_LABEL_DIRECTION
+- ERROR_LABEL_TIMEOUT
 
 ### useHighscores
 
 Aufgabe:
 
-- Scores laden
-- Speichern ueber API versuchen
-- bei Fehler auf LocalStorage umschalten
-- lokalen State fuer playerName, highscores, isSaving und isLocalMode bereitstellen
+- Scores laden (API, sonst LocalStorage)
+- erfolgreiche Runden speichern
+- lokalen Modus markieren
+- zuletzt gespeicherten Score fuer Ranking-Hinweis bereitstellen
 
-Wichtige Outputs:
+Wichtige Eigenschaften:
 
-- highscores
-- playerName
-- isSaving
-- isLocalMode
-- saveScore
+- anonym (kein playerName)
+- Duplikat-Schutz: gleicher Score wird nicht erneut gespeichert
+- latestSavedScore wird bei Dupes trotzdem gesetzt, damit Ranking-Hinweis weiter funktioniert
 
-## Wie eine Runde technisch ablaeuft
+## Ablauf einer Runde
 
-### 1. Start der Runde
+### 1. Start
 
-CmDraw emittiert bei Pointer-Down:
+CmDraw emittiert start-round. useRoundLifecycle.startRound() legt den ersten Punkt an, setzt Pointer-Capture, startet Timer/Timeout und triggert redraw().
 
-- start-round
+### 2. Bewegung
 
-index.vue reicht das an useCircleGame weiter.
-Intern landet es in useRoundLifecycle.startRound().
+CmDraw emittiert move-round. useRoundLifecycle.moveRound() fuegt Punkte hinzu und prueft Richtungswechsel.
+Bei Gegenrichtung wird die Runde mit Fehlerlabel sofort beendet.
 
-Dort passiert:
+### 3. Ende
 
-1. Pointer wird auf Gueltigkeit geprueft
-2. erster StrokePoint wird angelegt
-3. isDrawing wird gesetzt
-4. Pointer-Capture wird gesetzt
-5. Tick-Timer startet
-6. Timeout startet
-7. redraw wird ausgelost
+CmDraw emittiert end-round. useRoundLifecycle.endRound() stoppt Timer/Timeout und ruft evaluateRound (aus useCircleGame) auf.
 
-### 2. Bewegung waehrend des Zeichnens
+### 4. Persistenz
 
-CmDraw emittiert bei Pointer-Move:
+index.vue speichert erfolgreiche Runden automatisch (ohne Eingabe).
+Fehlerrunden werden nicht gespeichert.
 
-- move-round
+### 5. Reset
 
-Intern in useRoundLifecycle.moveRound():
+Beim Neustart werden sowohl Runde als auch latestSavedScore zurueckgesetzt.
 
-1. Punkt wird in Canvas-Koordinaten uebersetzt
-2. Richtungswechsel wird ueber Winkel relativ zum Mittelpunkt geprueft
-3. bei Gegenrichtung wird die Runde abgebrochen
-4. sonst wird der neue StrokePoint gespeichert
-5. redraw wird ausgelost
-
-### 3. Ende der Runde
-
-CmDraw emittiert bei Pointer-Up oder Pointer-Cancel:
-
-- end-round
-
-Intern in useRoundLifecycle.endRound():
-
-1. Timer und Timeout stoppen
-2. Pointer-Capture wird geloest
-3. evaluateRound wird aufgerufen
-4. das Ergebnis landet in result
-
-### 4. Reset der Runde
-
-Die Page ruft resetRound auf.
-
-Dabei passiert:
-
-1. useCircleGame.resetRound setzt die Spielrunde zurueck
-2. index.vue leert zusaetzlich den playerName
-
-## Canvas- und Render-Ablauf
-
-Der eigentliche Zeichenablauf wird ueber useCanvasRenderer.redraw() gesteuert.
-
-Redraw macht in Reihenfolge:
-
-1. Canvas leeren
-2. Hintergrundfarbe fuellen
-3. Guide-Kreis rendern
-4. Guide-Kreis beim Zeichnen ueber Zeit ausblenden
-5. vorhandene Stroke-Punkte ueber drawStroke rendern
-
-Die konkrete Optik des Strichs kommt nicht aus useCanvasRenderer, sondern aus useStrokeProfiles.
-
-## Stroke-Modi
-
-Die visuelle Darstellung des Strichs wird in useStrokeProfiles definiert.
-
-Vorhandene Modi:
-
-- fixed
-- deviation
-- cinematic
-
-Die Auswahl des aktuellen Modus kommt aus useGameSettings.
-Wenn sich der Modus aendert, fuehrt useCircleGame ein redraw aus.
-
-## Score-Logik aktuell
-
-Die aktuelle Score-Berechnung ist bewusst einfacher als die fruehere Version mit mehreren harten Fail-Regeln.
-
-### Ergebnisstruktur
-
-RoundResult enthaelt weiterhin diese Felder:
-
-- score
-- label
-- radialError
-- radiusFitError
-- closureError
-- directionChangeError
-- timeoutError
-- centerFailureError
-- guideSizeFailureError
-- coverageFailureError
-- coverageDegrees
-
-Hinweis:
-Mehrere Felder sind aktuell als Teil des Ergebnisformats erhalten, werden in der aktuellen vereinfachten Score-Berechnung aber nicht aktiv differenziert befuellt.
+## Scoring-Logik (aktuell)
 
 ### Aktive Regler in useCircleGame
 
 - ROUND_TIMEOUT_MS = 8000
-- GUIDE_RADIUS_FACTOR = 0.33
+- GUIDE_RADIUS_FACTOR = 0.45
 - GUIDE_FADE_OUT_MS = 900
 - SCORE_WEIGHT_CLOSURE = 0.1
+- FINAL_CLOSURE_ERROR_THRESHOLD = 0.18
 - DIRECTION_MIN_SEGMENT = 1
 - DIRECTION_MIN_ANGLE_DELTA = 0.02
 - DIRECTION_MIN_ANGLE_DELTA_FLOOR = 0.0012
@@ -302,141 +181,89 @@ Mehrere Felder sind aktuell als Teil des Ergebnisformats erhalten, werden in der
 - DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1
 - ENABLE_SCORE_DEBUG = import.meta.dev
 
-### calculateLiveScore
+### Live-Score
 
-calculateLiveScore arbeitet aktuell mit einer motivierenden Live-Score-Logik.
-Das heisst:
+calculateLiveScore() kombiniert:
 
-1. frueh moeglich einen lesbaren Zwischenwert liefern
-2. saubere Trajektorien eher hoch bewerten
-3. Abweichungen schrittweise abstrafen
+1. radiusFitError (Abweichung vom Zielradius)
+2. radialError (Streuung)
+3. closureError (Start-/Endabstand), gewichtet mit coverageProgress
 
-Die aktuelle Berechnung nutzt im Kern:
+Ergebnis ist ein nichtlinear rueckgerechneter Prozentwert (0-100), der waehrend des Zeichnens live angezeigt wird.
 
-1. radiusFitError
-  mittlere relative Abweichung vom Zielradius
+### Harte Fehlerfaelle
 
-2. radialError
-  Streuung der Punktabstaende
-
-3. closureError
-  Abstand zwischen erstem und letztem Punkt
-
-4. coverageProgress
-  beeinflusst das Gewicht des closureError
-
-5. liveError
-  Kombination aus radiusFitError, radialError und closureError
-
-6. liveScore
-  nichtlineare Rueckrechnung in einen Prozentwert
-
-### Harte Fail-Regeln aktuell
-
-Aktiv sind derzeit vor allem zwei sofortige Abbruchfaelle im Round-Lifecycle:
+Aktiv sind vier harte Fehlerfaelle:
 
 1. Richtungswechsel
-  directionChangeError = 1
+  Sofortiger Abbruch im Lifecycle, Label aus ERROR_LABEL_DIRECTION().
 
 2. Timeout
-  timeoutError = 1
+  Sofortiger Abbruch im Lifecycle, Label aus ERROR_LABEL_TIMEOUT().
 
-Zusaetzlich liefert createRoundResult Score 0, wenn calculateLiveScore kein gueltiges Ergebnis liefert, zum Beispiel bei zu wenig verwertbaren Punkten.
+3. Offener Kreis
+  In createRoundResult(): closureError > 0.18 fuehrt zu score = 0 und ERROR_LABEL_CLOSURE().
 
-## Wichtige Verdrahtungen zwischen den Composables
+4. Nicht auswertbare Kreisform
+  Wenn Metrics oder Live-Score nicht berechenbar sind, score = 0 und ERROR_LABEL_INVALID_FORM().
 
-Diese Kopplungen sind zentral fuer das Verstaendnis:
+## i18n-Status
 
-### useCircleGame -> useCanvasRenderer
+Das Projekt nutzt kein externes i18n-Modul.
+Texte liegen in:
 
-useCircleGame uebergibt an useCanvasRenderer:
+- app/locales/de.ts
+- app/locales/en.ts
 
-- Zugriff auf aktuelle Punkte
-- isDrawing
-- roundStartAt
-- selectedStrokeMode
-- drawStroke
+useLocale.ts liefert:
 
-Damit weiss der Renderer, was und wie er zeichnen soll.
+- locale
+- setLocale(locale)
+- t(path, params)
 
-### useCircleGame -> useRoundLifecycle
+Fehler- und Score-Labels in useCircleScoring greifen ebenfalls auf t() zu.
 
-useCircleGame uebergibt an useRoundLifecycle:
+## Highscore-Backend
 
-- canvasEl fuer Pointer-Capture
-- pointFromPointer aus dem Renderer
-- redraw aus dem Renderer
-- logicalSize aus dem Renderer
-- evaluateRound aus der Score-Schicht
-- toStrokePoint zur Normalisierung eingehender Punkte
+Serverseitig werden Highscores als anonymes Array aus score/createdAt verwaltet:
 
-Damit bekommt useRoundLifecycle alle technischen Hilfsmittel, ohne selbst Canvas-Rendering oder Score-Berechnung besitzen zu muessen.
+- server/utils/highscores.ts
 
-### index.vue -> useHighscores
+Eigenschaften:
 
-useHighscores bekommt nur:
+- keine Namen
+- Sortierung absteigend nach Score
+- Begrenzung auf Top 100
+- persistenter Speicherpfad ueber Runtime-Config (highscoreFilePath)
 
-- result
+## Wo kuenftige Aenderungen hingehoeren
 
-Damit bleibt die Datenlogik vom Spiel getrennt und weiss nur, ob und was gerade gespeichert werden kann.
+### UI und Darstellung
 
-## Warum diese Struktur sinnvoll ist
+- app/components/CmDraw.vue
+- app/components/CmHighscore.vue
+- app/components/CmConfettiRain.vue
 
-Die Aufteilung trennt vier verschiedene Arten von Verantwortung:
+### Rundenfluss, Pointer, Timer
 
-1. Darstellung
-  Komponenten
+- app/composables/useRoundLifecycle.ts
 
-2. Canvas-Technik
-  useCanvasRenderer
+### Mathematische Bewertung
 
-3. Rundenfluss und Interaktion
-  useRoundLifecycle
+- app/composables/useCircleScoring.ts
+- app/composables/useCircleGame.ts (Ergebnisabbildung und Schwellwerte)
 
-4. Mathematik und Bewertung
-  useCircleScoring
+### Speicherung / Ranking
 
-5. Datenhaltung und Persistenz
-  useHighscores
-
-6. Zusammenfuehrung des Spiels
-  useCircleGame
-
-Der wichtigste Vorteil:
-Die Page muss die interne Verdrahtung nicht mehr komplett kennen.
-
-## Wo kuenftige Aenderungen hingehoren
-
-### Wenn sich die UI aendert
-
-- CmDraw.vue
-- CmHighscore.vue
-- CmSave.vue
-
-### Wenn sich der Canvas-Zeichenstil aendert
-
-- useStrokeProfiles.ts
-
-### Wenn sich Timer, Pointer oder Reset-Verhalten aendern
-
-- useRoundLifecycle.ts
-
-### Wenn sich die mathematische Bewertung aendert
-
-- useCircleScoring.ts
-- teilweise useCircleGame.ts fuer die Ergebnisabbildung
-
-### Wenn sich Highscore-Speicherung aendert
-
-- useHighscores.ts
+- app/composables/useHighscores.ts
 - server/api/*.ts
+- server/utils/highscores.ts
 
-## Empfehlung fuer weitere Pflege
+### Mehrsprachigkeit
 
-Diese Architektur ist jetzt an einem guten Endzustand.
+- app/locales/*.ts
+- app/composables/useLocale.ts
 
-Empfehlung:
+## Pflegehinweis
 
-1. Keine weitere Kleinzerlegung ohne klaren Mehrwert
-2. Neue Spiellogik bevorzugt in useCircleGame oder dessen Unter-Composables einbauen
-3. Diese Datei aktualisieren, wenn sich Score-Regeln oder Verdrahtungen grundlegend aendern
+Bei Aenderungen an Fehlerlabels, Scoring-Regeln, Speicherlogik oder Datenmodell diese Datei zeitnah mitziehen.

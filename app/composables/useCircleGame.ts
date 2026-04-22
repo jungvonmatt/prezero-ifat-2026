@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted } from "vue";
-import { calculateLiveScore, clamp, getLabel, type Point, type RoundResult } from "./useCircleScoring";
+import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, type Point, type RoundResult } from "./useCircleScoring";
 import { useCanvasRenderer } from "./useCanvasRenderer";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useStrokeRenderer, type StrokePoint } from "./useStrokeRenderer";
@@ -9,6 +9,7 @@ const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
 const GUIDE_RADIUS_FACTOR = 0.45;
 const GUIDE_FADE_OUT_MS = 900;
 const SCORE_WEIGHT_CLOSURE = 0.1;
+const FINAL_CLOSURE_ERROR_THRESHOLD = 0.1;
 const DIRECTION_MIN_SEGMENT = 1;
 const DIRECTION_MIN_ANGLE_DELTA = 0.02;
 const DIRECTION_MIN_ANGLE_DELTA_FLOOR = 0.0012;
@@ -30,12 +31,13 @@ export function useCircleGame() {
   }
 
   function createRoundResult(currentPoints: StrokePoint[]): RoundResult {
+    const completionMetrics = getStrokeCompletionMetrics(currentPoints, logicalSize.value, GUIDE_RADIUS_FACTOR);
     const score = calculateLiveScore(currentPoints, logicalSize.value, GUIDE_RADIUS_FACTOR, SCORE_WEIGHT_CLOSURE);
 
-    if (score === null) {
+    if (score === null || !completionMetrics) {
       return {
         score: 0,
-        label: "Draw a full circle for a score",
+        label: ERROR_LABEL_INVALID_FORM(),
         radialError: 1,
         radiusFitError: 1,
         closureError: 1,
@@ -48,9 +50,26 @@ export function useCircleGame() {
       };
     }
 
+    if (completionMetrics.closureError > FINAL_CLOSURE_ERROR_THRESHOLD) {
+      return {
+        score: 0,
+        label: ERROR_LABEL_CLOSURE(),
+        radialError: 1,
+        radiusFitError: 1,
+        closureError: completionMetrics.closureError,
+        directionChangeError: 0,
+        timeoutError: 0,
+        centerFailureError: 0,
+        guideSizeFailureError: 0,
+        coverageFailureError: 0,
+        coverageDegrees: completionMetrics.coverageDegrees,
+      };
+    }
+
     if (ENABLE_SCORE_DEBUG) {
       console.debug("circle-score-live-final", {
         score,
+        completionMetrics,
         note: "final-score uses calculateLiveScore()",
       });
     }
@@ -60,13 +79,13 @@ export function useCircleGame() {
       label: getLabel(score),
       radialError: 0,
       radiusFitError: 0,
-      closureError: 0,
+      closureError: completionMetrics.closureError,
       directionChangeError: 0,
       timeoutError: 0,
       centerFailureError: 0,
       guideSizeFailureError: 0,
       coverageFailureError: 0,
-      coverageDegrees: 0,
+      coverageDegrees: completionMetrics.coverageDegrees,
     };
   }
 

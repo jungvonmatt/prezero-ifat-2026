@@ -14,9 +14,8 @@
         <ol class="highscore-list">
           <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
             <span class="rank">#{{ index + 1 }}</span>
-            <span class="entry-name">{{ entry.name }}</span>
             <em>{{ entry.score.toFixed(2) }}%</em>
-            <button class="delete-x" type="button" :disabled="isBusy" :aria-label="`Delete ${entry.name}`" @click="deleteEntry(entry)">X</button>
+            <button class="delete-x" type="button" :disabled="isBusy" :aria-label="`Delete entry ${index + 1}`" @click="deleteEntry(entry)">X</button>
           </li>
         </ol>
       </div>
@@ -27,7 +26,7 @@
 
 <script setup lang="ts">
 interface HighscoreEntry {
-  name: string;
+
   score: number;
   createdAt: string;
 }
@@ -47,13 +46,11 @@ function normalizeImportedEntries(input: unknown): HighscoreEntry[] {
   return sourceEntries
     .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
     .map((entry) => {
-      const safeName = typeof entry.name === "string" ? entry.name.trim().slice(0, 24) : "Anonymous";
       const rawScore = typeof entry.score === "number" ? entry.score : Number(entry.score);
       const safeCreatedAt = typeof entry.createdAt === "string" ? entry.createdAt : new Date().toISOString();
       const score = Number.isFinite(rawScore) ? rawScore : 0;
 
       return {
-        name: safeName || "Anonymous",
         score: Math.min(100, Math.max(0, score)),
         createdAt: safeCreatedAt,
       };
@@ -89,7 +86,7 @@ async function deleteEntry(entry: HighscoreEntry) {
         createdAt: entry.createdAt,
       },
     });
-    statusMessage.value = `Removed ${entry.name}.`;
+    statusMessage.value = `Entry removed.`;
   } finally {
     isBusy.value = false;
   }
@@ -199,12 +196,12 @@ onMounted(async () => {
 
 .highscore-list-wrap::before {
   top: 0;
-  background: linear-gradient(to bottom, #{variables.$core-color-bg}, transparent);
+  background: linear-gradient(to bottom, #{variables.$color-petrol}, transparent);
 }
 
 .highscore-list-wrap::after {
   bottom: 0;
-  background: linear-gradient(to top, #{variables.$core-color-bg}, transparent);
+  background: linear-gradient(to top, #{variables.$color-petrol}, transparent);
 }
 
 .highscore-list {
@@ -235,7 +232,7 @@ onMounted(async () => {
 
   border-radius: 10px 0 10px 10px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  background-color: variables.$core-color-bg;
+  background-color: variables.$color-petrol;
 
   margin: 12px 0;
 
@@ -245,7 +242,7 @@ onMounted(async () => {
 }
 
 .highscore-list .rank {
-  color: variables.$core-color-green;
+  color: variables.$color-bright-green;
   width: 60px;
 }
 
@@ -262,11 +259,11 @@ onMounted(async () => {
 
 .btn.danger {
   background: #8d1c1c;
-  color: variables.$core-color-white;
+  color: variables.$color-off-white;
 }
 
 .delete-x {
-  border: 1px solid variables.$core-color-white-soft;
+  border: 1px solid variables.$color-off-white;
   background: transparent;
   color: #fff;
   width: 38px;

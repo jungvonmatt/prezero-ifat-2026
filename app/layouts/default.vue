@@ -1,6 +1,6 @@
 <template>
   <div class="site-shell">
-    <header class="site-header">
+    <header v-if="isAdminRoute || hasTouchedGate" class="site-header">
       <NuxtLink to="/" class="brand-logo" aria-label="Zur Startseite">
         <img src="/logo.svg" alt="Logo" />
       </NuxtLink>
@@ -21,6 +21,7 @@
 <script setup lang="ts">
 const route = useRoute();
 const isAdminRoute = computed(() => route.path === "/admin");
+const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
 </script>
 
 <style scoped lang="scss">
@@ -30,13 +31,13 @@ const isAdminRoute = computed(() => route.path === "/admin");
 
 .brand-logo {
   position: absolute;
-  left: 48px;
-  top: 48px;
+  left: 80px;
+  top: 80px;
 }
 
 .brand-logo img {
   display: block;
-  width: 200px;
+  width: 160px;
   height: auto;
 }
 </style>

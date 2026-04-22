@@ -2,10 +2,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 
 export interface HighscoreEntry {
-  name: string
   score: number
   createdAt: string
 }
+
+const HIGHSCORE_LIMIT = 100
 
 function getDataFilePath() {
   const config = useRuntimeConfig()
@@ -41,22 +42,20 @@ export async function readHighscores() {
 
     return parsed.entries
       .filter((entry) => {
-        return typeof entry?.name === 'string' && typeof entry?.score === 'number' && typeof entry?.createdAt === 'string'
+        return typeof entry?.score === 'number' && typeof entry?.createdAt === 'string'
       })
       .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
+      .slice(0, HIGHSCORE_LIMIT)
   } catch {
     return []
   }
 }
 
-export async function addHighscore(input: { name?: string, score?: number }) {
+export async function addHighscore(input: { score?: number }) {
   const dataFilePath = getDataFilePath()
-  const safeName = (input.name || 'Anonymous').trim().slice(0, 24) || 'Anonymous'
   const safeScore = Number.isFinite(input.score) ? Math.min(100, Math.max(0, Number(input.score))) : 0
 
   const nextEntry: HighscoreEntry = {
-    name: safeName,
     score: Math.round(safeScore * 100) / 100,
     createdAt: new Date().toISOString()
   }
@@ -64,7 +63,7 @@ export async function addHighscore(input: { name?: string, score?: number }) {
   const current = await readHighscores()
   const updated = [...current, nextEntry]
     .sort((a, b) => b.score - a.score)
-    .slice(0, 10)
+    .slice(0, HIGHSCORE_LIMIT)
 
   await writeFile(dataFilePath, JSON.stringify({ entries: updated }, null, 2), 'utf8')
   return updated
@@ -74,19 +73,17 @@ export async function setHighscores(entries: HighscoreEntry[]) {
   const dataFilePath = getDataFilePath()
   const updated = entries
     .filter((entry) => {
-      return typeof entry?.name === 'string' && typeof entry?.score === 'number' && typeof entry?.createdAt === 'string'
+      return typeof entry?.score === 'number' && typeof entry?.createdAt === 'string'
     })
     .map((entry) => {
-      const safeName = entry.name.trim().slice(0, 24) || 'Anonymous'
       const safeScore = Math.min(100, Math.max(0, Number(entry.score)))
       return {
-        name: safeName,
         score: Math.round(safeScore * 100) / 100,
         createdAt: entry.createdAt
       }
     })
     .sort((a, b) => b.score - a.score)
-    .slice(0, 10)
+    .slice(0, HIGHSCORE_LIMIT)
 
   await writeFile(dataFilePath, JSON.stringify({ entries: updated }, null, 2), 'utf8')
   return updated

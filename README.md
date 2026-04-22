@@ -1,6 +1,16 @@
-# Nuxt Minimal Starter
+# PreZero IFAT 2026 Circle Game
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Interaktives Nuxt-Game zum Zeichnen eines moeglichst perfekten Kreises.
+Die App zeigt Live-Score waehrend des Zeichnens, bewertet die Runde nach Abschluss und speichert erfolgreiche Scores automatisch.
+
+## Features
+
+- Live-Score waehrend der Runde
+- Fehlererkennung fuer Richtungswechsel, Timeout, offenen Kreis und ungueltige Form
+- Automatisches, anonymes Speichern erfolgreicher Scores
+- API-First mit LocalStorage-Fallback
+- Top-3-Visualisierung und Ranking-Hinweis
+- Leichtgewichtiges i18n (Deutsch/Englisch) ohne externes Modul
 
 ## Setup
 
@@ -37,6 +47,17 @@ yarn dev
 # bun
 bun run dev
 ```
+
+## Architektur
+
+- `app/components/CmDraw.vue`: Canvas, Timer, Intro, Ergebnisdarstellung
+- `app/components/CmHighscore.vue`: Top-3, Liste, Rankingtext
+- `app/composables/useCircleGame.ts`: zentrale Spielfassade
+- `app/composables/useRoundLifecycle.ts`: Rundenfluss und Abbruchlogik
+- `app/composables/useCircleScoring.ts`: Scoreberechnung und Fehlerlabels
+- `app/composables/useHighscores.ts`: Laden/Speichern, Duplikat-Schutz, Fallback
+- `app/composables/useLocale.ts`: t(path, params), locale, setLocale
+- `server/utils/highscores.ts`: serverseitige Persistenz (Top 100)
 
 ## Production
 
@@ -97,22 +118,77 @@ Production URL target:
 The Node process is started with `HIGHSCORE_FILE_PATH=data/highscores.json` to keep highscores writable and persistent on the server deployment path.
 Locally (without this env var), highscores continue to use `content/highscores.json`.
 
-## Stroke Mode Configuration
-
-You can set a default stroke behavior via runtime config using `NUXT_PUBLIC_STROKE_MODE`.
-
-Supported values:
-
-- `fixed`
-- `deviation`
-- `cinematic` (displayed as `Realistic` in the UI)
-
-Example:
-
-```bash
-NUXT_PUBLIC_STROKE_MODE=cinematic npm run dev
-```
-
 ## Scoring Documentation
 
 Detailed documentation for drawing, error handling, and score tuning is available in [docs/score-logic.md](docs/score-logic.md).
+
+## Highscore behavior
+
+- Erfolgreiche Runden werden automatisch gespeichert (kein Save-Button)
+- Speicherung ist anonym (`score`, `createdAt`)
+- Doppelte Score-Werte werden clientseitig nicht erneut gespeichert
+- Bei API-Fehler wird auf LocalStorage-Fallback gewechselt
+
+## Highscore API
+
+Alle Endpunkte arbeiten mit anonymen Eintraegen im Format:
+
+- score: number
+- createdAt: ISO-String
+
+### GET /api/highscores
+
+- Zweck: Aktuelle Highscores laden
+- Request-Body: keiner
+- Response: Array von Highscore-Eintraegen (absteigend sortiert)
+
+### POST /api/highscores
+
+- Zweck: Einen Score hinzufuegen
+- Request-Body:
+
+```json
+{
+	"score": 87.5
+}
+```
+
+- Response: Aktualisiertes Array von Highscore-Eintraegen
+- Fehlerfall: 400 bei ungueltigem Payload (missing/ungueltiges score)
+
+### PUT /api/highscores
+
+- Zweck: Gesamte Highscore-Liste importieren/ersetzen
+- Request-Body:
+
+```json
+{
+	"entries": [
+		{ "score": 91.2, "createdAt": "2026-04-22T08:00:00.000Z" },
+		{ "score": 87.5, "createdAt": "2026-04-22T09:00:00.000Z" }
+	]
+}
+```
+
+- Response: Aktualisiertes, validiertes Array von Highscore-Eintraegen
+- Fehlerfall: 400 bei ungueltigem Payload (entries fehlt/kein Array)
+
+### DELETE /api/highscores
+
+- Zweck: Alle Highscores loeschen
+- Request-Body: keiner
+- Response: Leeres (oder entsprechend aktualisiertes) Array
+
+### DELETE /api/highscores/item
+
+- Zweck: Einzelnen Eintrag ueber Zeitstempel loeschen
+- Request-Body:
+
+```json
+{
+	"createdAt": "2026-04-22T09:00:00.000Z"
+}
+```
+
+- Response: Aktualisiertes Array ohne geloeschten Eintrag
+- Fehlerfall: 400 bei fehlendem oder leerem createdAt

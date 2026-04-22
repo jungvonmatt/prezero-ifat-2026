@@ -1,11 +1,13 @@
-$core-color-tertiary-base: #00343d;
-$core-color-tertiary-darker: #002329;
+$color-petrol: #003d49;
+$color-petrol-light: #0D4752;
 
-$core-color-bg: #013c4a;
-$core-color-green: #A5C814;
-$core-color-dark: #16424A;
-$core-color-white-soft: #fdfdfd;
-$core-color-white: #ffffff;
+$color-teal: #79b992;
+$color-bright-green: #bce514;
+$color-light-gray: #d4dee8;
+$color-off-white: #f0f0f0;
 
-
-$muted: color-mix(in srgb, #{$core-color-white} 62%, white 38%);
+:root {
+  --color-off-white: #{$color-off-white};
+  --color-petrol: #{$color-petrol};
+  --color-bright-green: #{$color-bright-green};
+}

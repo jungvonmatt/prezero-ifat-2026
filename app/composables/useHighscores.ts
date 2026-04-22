@@ -2,7 +2,7 @@ import { onMounted, ref, type Ref } from "vue";
 import type { RoundResult } from "./useCircleScoring";
 
 export interface HighscoreEntry {
-  name: string;
+
   score: number;
   createdAt: string;
 }
@@ -15,9 +15,9 @@ const LOCAL_STORAGE_KEY = "ifat_highscores";
 
 export function useHighscores(options: UseHighscoresOptions) {
   const highscores = ref<HighscoreEntry[]>([]);
-  const playerName = ref("");
   const isSaving = ref(false);
   const isLocalMode = ref(false);
+  const latestSavedScore = ref<number | null>(null);
 
   function getLocalHighscores(): HighscoreEntry[] {
     if (!import.meta.client) return [];
@@ -30,11 +30,10 @@ export function useHighscores(options: UseHighscoresOptions) {
     }
   }
 
-  function saveLocalHighscore(entry: { name: string; score: number }): HighscoreEntry[] {
+  function saveLocalHighscore(score: number): HighscoreEntry[] {
     const current = getLocalHighscores();
     const newEntry: HighscoreEntry = {
-      name: entry.name || "Anonymous",
-      score: entry.score,
+      score,
       createdAt: new Date().toISOString(),
     };
 
@@ -53,32 +52,35 @@ export function useHighscores(options: UseHighscoresOptions) {
   }
 
   async function saveScore() {
-    if (!options.result.value) return;
+    if (!options.result.value || isSaving.value) return;
+
+    const scoreToSave = options.result.value.score;
+    const alreadyExists = highscores.value.some((e) => e.score === scoreToSave);
+    if (alreadyExists) {
+      latestSavedScore.value = scoreToSave;
+      return;
+    }
+
     isSaving.value = true;
 
     try {
       if (isLocalMode.value) {
-        highscores.value = saveLocalHighscore({
-          name: playerName.value,
-          score: options.result.value.score,
-        });
+        highscores.value = saveLocalHighscore(scoreToSave);
       } else {
         try {
           highscores.value = await $fetch<HighscoreEntry[]>("/api/highscores", {
             method: "POST",
             body: {
-              name: playerName.value,
-              score: options.result.value.score,
+              score: scoreToSave,
             },
           });
         } catch {
           isLocalMode.value = true;
-          highscores.value = saveLocalHighscore({
-            name: playerName.value,
-            score: options.result.value.score,
-          });
+          highscores.value = saveLocalHighscore(scoreToSave);
         }
       }
+
+      latestSavedScore.value = scoreToSave;
     } finally {
       isSaving.value = false;
     }
@@ -90,10 +92,11 @@ export function useHighscores(options: UseHighscoresOptions) {
 
   return {
     highscores,
-    playerName,
     isSaving,
     isLocalMode,
+    latestSavedScore,
     loadHighscores,
     saveScore,
+    resetLatestSavedScore: () => { latestSavedScore.value = null; },
   };
 }
