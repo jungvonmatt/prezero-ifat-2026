@@ -19,8 +19,6 @@
         </Transition>
       </div>
 
-      <p v-if="hasResult && showResultLabel" class="result-label">{{ resultLabel }}</p>
-
       <CmConfettiRain :active="shouldShowConfetti" />
 
       <Transition name="timer">
@@ -121,21 +119,6 @@ const emit = defineEmits<{
   &.has-result {
     color: variables.$color-bright-green;
   }
-}
-
-.result-label {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, calc(-50% + 8px));
-
-  z-index: 4;
-
-  pointer-events: none;
-
-  color: #ffffff;
-  font-size: 28px;
-  text-align: center;
 }
 
 .highscore-hint {

@@ -31,8 +31,10 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
   function configureCanvas() {
     if (!canvasWrapEl.value || !canvasEl.value) return;
 
-    const rectWrap = canvasWrapEl.value.getBoundingClientRect();
-    const nextLogicalSize = Math.floor(Math.min(rectWrap.width, rectWrap.height || rectWrap.width));
+    // Use layout dimensions (pre-transform) so logical canvas size stays stable even when the whole app is scaled.
+    const wrapWidth = canvasWrapEl.value.clientWidth;
+    const wrapHeight = canvasWrapEl.value.clientHeight || wrapWidth;
+    const nextLogicalSize = Math.floor(Math.min(wrapWidth, wrapHeight));
     if (nextLogicalSize <= 0) return;
 
     logicalSize.value = nextLogicalSize;
@@ -91,13 +93,13 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
   }
 
   function pointFromPointer(event: PointerEvent): Point | null {
-    if (!canvasEl.value) return null;
+    if (!canvasEl.value || !logicalSize.value) return null;
 
     const rect = canvasEl.value.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const x = (event.clientX - rect.left) * (logicalSize.value / rect.width);
+    const y = (event.clientY - rect.top) * (logicalSize.value / rect.height);
 
-    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+    if (x < 0 || y < 0 || x > logicalSize.value || y > logicalSize.value) {
       return null;
     }
 

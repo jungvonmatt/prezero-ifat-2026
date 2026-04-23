@@ -242,6 +242,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     resetRoundClock();
     points.value = [];
     result.value = null;
+    hasStarted.value = false;
     resetTransientState();
   }
 

@@ -40,7 +40,7 @@
     <aside v-if="!showLanguageGate && Boolean(result)" class="sidebar">
       <h2>{{ t("highscores.title") }}</h2>
       <span v-if="isLocalMode" class="local-badge">{{ t("highscores.localBadge") }}</span>
-      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" :latest-saved-score="latestSavedScore" />
+      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" :latest-saved-score="latestSavedScore" :result-label="result?.label" />
       <button class="btn restart" @click="resetRound">{{ t("game.restart") }}</button>
     </aside>
   </div>
@@ -58,7 +58,7 @@ const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLe
 const { highscores, isSaving, isLocalMode, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({ result });
 const { t, setLocale } = useLocale();
 
-const showLanguageGate = ref(true);
+const showLanguageGate = useState<boolean>("showLanguageGate", () => true);
 const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
 
 const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT()]));
@@ -67,6 +67,15 @@ const isNewHighscore = ref(false);
 const showResultLabel = computed(() => {
   const label = result.value?.label;
   return Boolean(label && RESULT_ERROR_LABELS.value.has(label));
+});
+
+// Reset entire app when logo is clicked
+watch(hasTouchedGate, (newValue) => {
+  if (!newValue && !showLanguageGate.value) {
+    showLanguageGate.value = true;
+    resetGameRound();
+    resetLatestSavedScore();
+  }
 });
 
 watch(result, (nextResult) => {
@@ -149,6 +158,8 @@ article {
   gap: 26px;
   padding: 30px 20px;
   text-align: center;
+
+  cursor: pointer;
 }
 
 .language-gate-logo {
@@ -161,6 +172,7 @@ article {
   font-family: fonts.$font-secondary-regular;
   font-size: 56px;
   line-height: 1;
+  pointer-events: none;
 }
 
 .language-gate-actions {

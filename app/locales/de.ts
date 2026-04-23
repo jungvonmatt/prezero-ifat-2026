@@ -25,5 +25,6 @@ export default {
     localBadge: "Lokal gespeichert",
     rankTop: "Du befindest dich auf Platz {rank} aller Teilnehmenden.",
     rankPercent: "Du befindest dich auf Platz {rank} und somit unter den besten {percent}% aller Teilnehmenden!",
+    noRanking: "Keine Wertung.",
   },
 } satisfies import("~/locales/types").LocaleMessages;

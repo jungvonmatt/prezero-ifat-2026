@@ -1,5 +1,6 @@
 <template>
   <article class="highscore-article">
+    
     <!-- 3 best scores -->
     <div class="highscore-top-3">
       <div v-for="(entry, index) in highscores.slice(0, 3)" :key="entry.createdAt + index" class="highscore-top-entry" :style="{ '--entry-height': getTopEntryHeight(entry.score) }">
@@ -11,7 +12,7 @@
     <!-- highscre-list -->
     <div v-if="highscores.length" class="highscore-list-wrap">
       <ol class="highscore-list">
-        <li v-for="(entry, index) in highscores" :key="entry.createdAt + index">
+        <li v-for="(entry, index) in highscores" :key="entry.createdAt + index" :style="{ '--list-index': index }">
           <span>#{{ index + 1 }}</span>
           <span>{{ entry.score.toFixed(1) }}%</span>
         </li>
@@ -24,6 +25,7 @@
       <p v-if="currentRank && currentRank <= 3" class="ranking-info">{{ t("highscores.rankTop", { rank: currentRank }) }}</p>
       <p v-else-if="currentRank && currentRank > 3 && currentTopPercent !== null" class="ranking-info">{{ t("highscores.rankPercent", { rank: currentRank, percent: currentTopPercent }) }}</p>
       <p v-else class="ranking-info">{{ t("highscores.noRanking") }}</p>
+      <p v-if="resultLabel && !currentRank" class="ranking-error-hint">{{ resultLabel }}</p>
     </div>
   </article>
 </template>
@@ -43,6 +45,7 @@ const props = defineProps<{
   highscores: HighscoreEntry[];
   isLocalMode: boolean;
   latestSavedScore: number | null;
+  resultLabel?: string;
 }>();
 
 const currentRank = computed<number | null>(() => {
@@ -64,7 +67,7 @@ const currentTopPercent = computed<number | null>(() => {
 });
 
 function getTopEntryHeight(score: number): string {
-  const TOP_ENTRY_HEIGHT_EXPONENT = 2.4;
+  const TOP_ENTRY_HEIGHT_EXPONENT = 3.4;
   const roundedScore = Number(score.toFixed(1));
   const clampedScore = Math.min(Math.max(roundedScore, 0), 100);
 
@@ -84,7 +87,7 @@ function getTopEntryHeight(score: number): string {
 @use "~/assets/styles/fonts" as fonts;
 
 .highscore-article {
-  height: 66%;
+  height: 80%;
 
   display: flex;
   flex-direction: column;
@@ -101,6 +104,8 @@ function getTopEntryHeight(score: number): string {
   height: 180px;
 
   .highscore-top-entry {
+    --bar-delay: 0ms;
+
     flex: 1;
     background-color: variables.$color-petrol-light;
     border-radius: 10px;
@@ -117,18 +122,35 @@ function getTopEntryHeight(score: number): string {
     font-size: 32px;
 
     height: var(--entry-height, 50%);
+    opacity: 0;
+
+    animation: topEntryGrow 420ms cubic-bezier(0.22, 1, 0.36, 1) var(--bar-delay) forwards;
+
+    > span {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: topCopyIn 220ms ease-out forwards;
+      animation-delay: calc(var(--bar-delay) + 280ms);
+    }
+
+    > span:last-of-type {
+      animation-delay: calc(var(--bar-delay) + 330ms);
+    }
   }
 
   .highscore-top-entry:nth-child(1) {
     order: 2;
+    --bar-delay: 0ms;
   }
 
   .highscore-top-entry:nth-child(2) {
     order: 1;
+    --bar-delay: 90ms;
   }
 
   .highscore-top-entry:nth-child(3) {
     order: 3;
+    --bar-delay: 180ms;
   }
 }
 
@@ -183,6 +205,8 @@ function getTopEntryHeight(score: number): string {
 }
 
 .highscore-list li {
+  --list-index: 0;
+
   display: flex;
   padding: 12px 16px;
   justify-content: space-between;
@@ -197,6 +221,11 @@ function getTopEntryHeight(score: number): string {
 
   margin: 12px 0;
 
+  opacity: 0;
+  transform: translateY(12px);
+  animation: listItemIn 260ms ease-out forwards;
+  animation-delay: calc(620ms + var(--list-index) * 45ms);
+
   &:hover {
     border-color: variables.$color-off-white;
   }
@@ -207,10 +236,14 @@ function getTopEntryHeight(score: number): string {
 }
 
 .ranking{
-  min-height: 100px
+  min-height: 100px;
+  opacity: 0;
+  animation: fadeIn 280ms ease-out forwards;
+  animation-delay: 1050ms;
 } 
 
-.ranking-info {
+.ranking-info,
+.ranking-error-hint {
   @include fonts.font-secondary-regular;
   color: variables.$color-off-white;
   font-size: 32px;
@@ -232,5 +265,62 @@ function getTopEntryHeight(score: number): string {
 
 .muted {
   margin: 0;
+}
+
+@keyframes topEntryGrow {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--entry-height, 50%);
+    opacity: 1;
+  }
+}
+
+@keyframes topCopyIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes listItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highscore-top-entry,
+  .highscore-top-entry > span,
+  .highscore-list li,
+  .ranking {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .highscore-top-entry {
+    height: var(--entry-height, 50%);
+  }
 }
 </style>
