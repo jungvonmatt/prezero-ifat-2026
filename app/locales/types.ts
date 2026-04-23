@@ -12,11 +12,16 @@ export interface LocaleMessages {
     timeout: string;
   };
   score: {
-    label98: string;
-    label92: string;
-    label82: string;
+    label95: string;
+    label90: string;
+    label85: string;
+    label80: string;
+    label75: string;
     label70: string;
+    label65: string;
+    label60: string;
     label55: string;
+    label50: string;
     label0: string;
   };
   highscores: {
@@ -26,5 +31,8 @@ export interface LocaleMessages {
     rankTop: string;
     rankPercent: string;
     noRanking: string;
+  };
+  tooltip: {
+    label: string;
   };
 }

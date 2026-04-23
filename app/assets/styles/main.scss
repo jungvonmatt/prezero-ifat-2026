@@ -1,5 +1,6 @@
 @use "~/assets/styles/fonts" as fonts;
 @use "~/assets/styles/colors" as variables;
+@use "~/assets/styles/transitions";
 
 * {
   box-sizing: border-box;
@@ -48,26 +49,13 @@ a {
 }
 
 .footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: -16px;
-  z-index: 100;
-}
-
-.footer nav {
-  display: flex;
-  gap: 14px;
+  z-index: 500;
+  width: fit-content;
 }
 
 .footer a {
   text-decoration: none;
   border-bottom: 1px solid transparent;
-}
-
-.footer a:hover {
-  border-color: variables.$color-petrol;
 }
 
 .brand {

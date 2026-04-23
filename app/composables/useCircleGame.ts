@@ -146,7 +146,9 @@ export function useCircleGame() {
       return `${result.value.score.toFixed(1)}%`;
     }
 
-    if (!isDrawing.value) return "";
+    if (!isDrawing.value) {
+      return hasStarted.value ? "0%" : "";
+    }
 
     const liveScore = calculateLiveScore(points.value, logicalSize.value, GUIDE_RADIUS_FACTOR, SCORE_WEIGHT_CLOSURE);
     if (liveScore === null) return "0%";

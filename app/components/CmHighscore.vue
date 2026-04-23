@@ -116,7 +116,7 @@ function getTopEntryHeight(score: number): string {
     justify-content: space-between;
 
     background-color: variables.$color-bright-green;
-    border-radius: 22px 0 22px 22px;
+    border-radius: 20px 0 20px 20px;
 
     color: variables.$color-petrol;
     font-size: 32px;
@@ -145,12 +145,12 @@ function getTopEntryHeight(score: number): string {
 
   .highscore-top-entry:nth-child(2) {
     order: 1;
-    --bar-delay: 90ms;
+    --bar-delay: 70ms;
   }
 
   .highscore-top-entry:nth-child(3) {
     order: 3;
-    --bar-delay: 180ms;
+    --bar-delay: 140ms;
   }
 }
 
@@ -189,7 +189,6 @@ function getTopEntryHeight(score: number): string {
 
 .highscore-list {
   margin: 0;
-  // padding: 18px 0 18px 0;
   list-style: none;
   flex: 1;
   height: 100%;
@@ -224,7 +223,7 @@ function getTopEntryHeight(score: number): string {
   opacity: 0;
   transform: translateY(12px);
   animation: listItemIn 260ms ease-out forwards;
-  animation-delay: calc(620ms + var(--list-index) * 45ms);
+  animation-delay: calc(420ms + var(--list-index) * 35ms);
 
   &:hover {
     border-color: variables.$color-off-white;
@@ -239,7 +238,7 @@ function getTopEntryHeight(score: number): string {
   min-height: 100px;
   opacity: 0;
   animation: fadeIn 280ms ease-out forwards;
-  animation-delay: 1050ms;
+  animation-delay: 620ms;
 } 
 
 .ranking-info,

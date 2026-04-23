@@ -1,8 +1,8 @@
 <template>
   <div class="app-viewport-fit" :class="{ 'app-viewport-fit--scaled': enableViewportFit }">
-    <div class="app-viewport-content" :style="viewportStyle">
+    <div ref="viewportContent" class="app-viewport-content" :style="viewportStyle">
       <div class="site-shell">
-        <header class="site-header">
+        <header v-if="isAdminRoute || hasTouchedGate" class="site-header">
           <button class="brand-logo" aria-label="App zurücksetzen" @click="resetApp">
             <img src="/logo.svg" alt="Logo" />
           </button>
@@ -28,7 +28,6 @@ const BASE_HEIGHT = 1080;
 const enableViewportFit = import.meta.dev;
 
 const route = useRoute();
-const router = useRouter();
 const isAdminRoute = computed(() => route.path === "/admin");
 const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
 
@@ -40,6 +39,8 @@ function resetApp() {
 const viewportScale = ref(1);
 const viewportOffsetX = ref(0);
 const viewportOffsetY = ref(0);
+
+const viewportContent = ref<HTMLElement | null>(null);
 
 function updateViewportScale() {
   if (!enableViewportFit) {
@@ -80,6 +81,14 @@ onMounted(() => {
   if (enableViewportFit) {
     window.addEventListener("resize", updateViewportScale, { passive: true });
   }
+
+
+  setTimeout(() => {
+    viewportContent.value?.style.setProperty("opacity", "1");
+    viewportContent.value?.style.setProperty("transition", "opacity 0.6s ease, transform 0.3s ease");
+  }, 500);
+
+
 });
 
 onBeforeUnmount(() => {
@@ -102,6 +111,7 @@ onBeforeUnmount(() => {
 }
 
 .app-viewport-content {
+  opacity: 0;
   width: 100%;
   height: 100%;
 }

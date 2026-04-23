@@ -1,5 +1,5 @@
 <template>
-  <section class="card admin-panel">
+  <section class="admin-panel">
     <div>
       <h2>Highscore entries</h2>
       <div class="admin-actions">
@@ -155,8 +155,9 @@ onMounted(async () => {
 @use "~/assets/styles/colors" as variables;
 
 .admin-panel {
+  width: fit-content;
   height: 100%;
-  margin-top: 15dvh;
+  margin: 20dvh auto 0;
 }
 
 .admin-actions {
@@ -164,7 +165,7 @@ onMounted(async () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
-  margin: 24px 0 24px;
+  margin: 48px 0 40px;
 }
 
 .hidden-input {
@@ -181,6 +182,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: variables.$color-petrol;
 }
 
 .highscore-list-wrap::before,
@@ -188,25 +190,27 @@ onMounted(async () => {
   content: "";
   position: absolute;
   left: 0;
-  right: 0;
-  height: 18px;
+  right: 0px;
+  height: 32px;
   pointer-events: none;
   z-index: 1;
+  will-change: opacity;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .highscore-list-wrap::before {
-  top: 0;
-  background: linear-gradient(to bottom, #{variables.$color-petrol}, transparent);
+  top: -3px;
+  background: linear-gradient(to bottom, #{variables.$color-petrol}, #{rgba(variables.$color-petrol, 0)});
 }
 
 .highscore-list-wrap::after {
-  bottom: 0;
-  background: linear-gradient(to top, #{variables.$color-petrol}, transparent);
+  bottom: -1px;
+  background: linear-gradient(to top, #{variables.$color-petrol}, #{rgba(variables.$color-petrol, 0)});
 }
 
 .highscore-list {
   margin: 0;
-  padding: 18px 0;
   list-style: none;
   flex: 1;
   height: 100%;
@@ -223,38 +227,33 @@ onMounted(async () => {
 
 .highscore-list li {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 12px;
+  gap: 56px;
   padding: 12px 16px;
 
+  color: variables.$color-off-white;
   font-size: 32px;
 
-  border-radius: 10px 0 10px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(variables.$color-off-white, 0.5);
   background-color: variables.$color-petrol;
 
   margin: 12px 0;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 1);
+    border-color: variables.$color-off-white;
   }
 }
 
 .highscore-list .rank {
-  color: variables.$color-bright-green;
+  color: variables.$color-off-white;
   width: 60px;
 }
 
-.highscore-list .entry-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .highscore-list em {
+  color: variables.$color-bright-green;
   font-style: normal;
-  font-weight: 400;
 }
 
 .btn.danger {
@@ -263,6 +262,7 @@ onMounted(async () => {
 }
 
 .delete-x {
+  justify-self: end;
   border: 1px solid variables.$color-off-white;
   background: transparent;
   color: #fff;

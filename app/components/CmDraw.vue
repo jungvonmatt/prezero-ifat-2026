@@ -4,7 +4,7 @@
       <canvas :ref="setCanvasEl" class="circle-canvas" @pointerdown="emit('start-round', $event)" @pointermove="emit('move-round', $event)" @pointerup="emit('end-round', $event)" @pointercancel="emit('end-round', $event)" />
 
       <Transition name="fade">
-        <div v-if="!hasStarted" class="intro-copy">
+        <div v-if="showIntro && !hasStarted" class="intro-copy">
           <span v-html="t('game.intro').replace('\n', '<br />')"></span>
           <button class="btn" @click="emit('start-game')">{{ t("game.start") }}</button>
         </div>
@@ -12,7 +12,7 @@
 
       <div class="score-container">
         <Transition name="fade">
-          <p v-if="isDrawing || (hasResult && !showResultLabel)" class="score-display" :class="{ 'has-result': hasResult }">{{ scoreDisplayText }}</p>
+          <p v-if="isDrawing || (!hasResult && hasStarted) || (hasResult && !showErrorLabel)" class="score-display" :class="{ 'has-result': hasResult }">{{ scoreDisplayText }}</p>
         </Transition>
         <Transition name="fade">
           <p v-if="hasResult && isNewHighscore" class="highscore-hint">{{ t("game.highscore") }}</p>
@@ -46,11 +46,12 @@ const { t } = useLocale();
 const props = defineProps<{
   setCanvasWrapEl: (value: Element | ComponentPublicInstance | null) => void;
   setCanvasEl: (value: Element | ComponentPublicInstance | null) => void;
+  showIntro: boolean;
   hasStarted: boolean;
   isDrawing: boolean;
   hasResult: boolean;
   resultScore: number | null;
-  showResultLabel: boolean;
+  showErrorLabel: boolean;
   isNewHighscore: boolean;
   resultLabel: string;
   scoreDisplayText: string;
@@ -60,7 +61,7 @@ const props = defineProps<{
 }>();
 
 const shouldShowConfetti = computed(() => {
-  return props.hasResult && !props.showResultLabel && (props.resultScore ?? 0) >= 90;
+  return props.hasResult && !props.showErrorLabel && (props.resultScore ?? 0) >= 90;
 });
 
 const emit = defineEmits<{
@@ -175,10 +176,10 @@ const emit = defineEmits<{
   left: 50%;
   top: 50%;
 
-  margin-top: 80px;
+  margin-top: 160px;
 
-  width: 48px;
-  height: 48px;
+  width: 80px;
+  height: 80px;
 
   transform: translate(-50%, -50%);
 
@@ -189,13 +190,16 @@ const emit = defineEmits<{
 }
 
 .timer-overlay p {
-  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .timer-caption {
-  font-size: 0.65rem;
-  letter-spacing: 0.04em;
+  display: inline-block;
+  min-width: 5ch;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 16px;
+  letter-spacing: 1.1;
 }
 
 .timer-overlay-content {
@@ -216,7 +220,7 @@ const emit = defineEmits<{
 .timer-ring-track,
 .timer-ring-progress {
   fill: none;
-  stroke-width: 6;
+  stroke-width: 8;
 }
 
 .timer-ring-track {
@@ -228,20 +232,6 @@ const emit = defineEmits<{
   stroke-linecap: round;
   stroke-dasharray: 263.89378290154264;
   transition: stroke 0.2s ease;
-}
-
-.timer-overlay.warning .timer-ring-progress {
-  //   stroke: #e05b3f;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 300ms ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 
 @media (max-width: 860px) {

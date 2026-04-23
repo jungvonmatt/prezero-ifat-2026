@@ -43,11 +43,16 @@ export const ERROR_LABEL_DIRECTION = () => t("errors.direction");
 export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout");
 
 export function getLabel(score: number) {
-  if (score >= 98) return t("score.label98");
-  if (score >= 92) return t("score.label92");
-  if (score >= 82) return t("score.label82");
+  if (score >= 95) return t("score.label95");
+  if (score >= 90) return t("score.label90");
+  if (score >= 85) return t("score.label85");
+  if (score >= 80) return t("score.label80");
+  if (score >= 75) return t("score.label75");
   if (score >= 70) return t("score.label70");
+  if (score >= 65) return t("score.label65");
+  if (score >= 60) return t("score.label60");
   if (score >= 55) return t("score.label55");
+  if (score >= 50) return t("score.label50");
   return t("score.label0");
 }
 
