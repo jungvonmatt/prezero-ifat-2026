@@ -258,8 +258,8 @@ article {
 .tooltip-info {
   position: absolute;
   left: 0;
-  bottom: 0;
-  z-index: 300;
+  bottom: 64px;
+  z-index: 500;
 
   width: 640px;
 
@@ -360,7 +360,7 @@ article {
 
 .tooltip-header,
 .tooltip-body {
-  animation-delay: 1060ms;
+  animation-delay: 900ms;
 }
 
 @keyframes tooltipHeaderIn {
