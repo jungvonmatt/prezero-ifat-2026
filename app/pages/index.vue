@@ -58,7 +58,7 @@ const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLe
 const { highscores, isSaving, isLocalMode, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({ result });
 const { t, setLocale } = useLocale();
 
-const showLanguageGate = useState<boolean>("showLanguageGate", () => true);
+const showLanguageGate = ref(true);
 const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
 
 const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT()]));
