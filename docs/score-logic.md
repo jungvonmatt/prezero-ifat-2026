@@ -1,6 +1,6 @@
 # Circle Game: Architektur, Verdrahtung und Score-Logik
 
-Stand: 22.04.2026
+Stand: 23.04.2026
 
 ## Zweck dieser Datei
 
@@ -9,10 +9,15 @@ Sie ist auf den aktuellen Code in app/composables, app/components, app/pages und
 
 ## Aktuelle Gesamtstruktur
 
+### Layout
+
+- app/layouts/default.vue
+  App-Shell: Viewport-Scaling (nur dev), Logo-Button mit App-Reset, Header, Footer-Nav
+
 ### Komponenten
 
 - app/components/CmDraw.vue
-  Canvas, Intro, Live-Score, Timer, Ergebnislabel, Highscore-Hinweis
+  Canvas, Intro (nur nach Language-Gate), Live-Score, Timer, Ergebnislabel, Highscore-Hinweis
 - app/components/CmHighscore.vue
   Top-3-Visualisierung, Liste, Ranking-Hinweis
 - app/components/CmConfettiRain.vue
@@ -40,7 +45,9 @@ Hinweis: CmSave.vue existiert nicht mehr. Speichern erfolgt automatisch und anon
 ### Page
 
 - app/pages/index.vue
-  Duenne Orchestrierung zwischen Draw, Highscore, Game-Logic, Highscore-Logic und Locale
+  Orchestrierung von Spielablauf, Language Gate, Tooltip-Info, Highscore-Sidebar und Locale.
+  Enthält: Language Gate (Tap-to-start + Sprachauswahl), Tooltip-Info mit Dismiss-Logik,
+  automatisches Speichern erfolgreicher Runden, isNewHighscore-Ermittlung, showErrorLabel-Berechnung.
 
 ## Datenfluss auf hoher Ebene
 
@@ -58,13 +65,27 @@ index.vue
 index.vue
   -> useLocale()
 
+default.vue
+  -> hasTouchedGate (useState, geteilt mit index.vue)
+  -> resetApp() setzt hasTouchedGate = false, navigiert zu "/"
+
 index.vue
   -> CmDraw
   -> CmHighscore
   -> CmConfettiRain (in CmDraw)
+  -> tooltip-info (inline)
 ```
 
 ## Verantwortungen pro Baustein
+
+### default.vue (Layout)
+
+Aufgabe:
+
+- App-Shell mit Header, Footer-Nav und Seiten-Slot
+- Viewport-Scaling (CSS-Transform auf 1920×1080-Basis, nur im Dev-Modus aktiv)
+- Logo als Button: resetApp() setzt hasTouchedGate (useState) auf false und navigiert zu "/"
+- Header wird nur gezeigt, wenn hasTouchedGate == true oder Admin-Route
 
 ### useCircleGame
 
@@ -85,6 +106,12 @@ useCircleGame ist die zentrale Spielfassade und liefert nur die Werte/Aktionen, 
 - endRound
 - resetRound
 - result
+
+scoreDisplayText-Verhalten:
+- Kein Start: leerer String
+- hasStarted, kein Ergebnis, nicht am Zeichnen: "0%" (z.B. nach Restart)
+- Am Zeichnen: Live-Score aus calculateLiveScore(), Fallback "0%" wenn null
+- Ergebnis vorhanden: "XX.X%"
 
 Interne Aufgabe: createRoundResult(), Redraw-Verdrahtung, Timer-Konfiguration und Scoring-Einbindung.
 
@@ -120,6 +147,7 @@ Wichtige Exporte:
 
 - calculateLiveScore
 - getStrokeCompletionMetrics
+- getLabel
 - ERROR_LABEL_INVALID_FORM
 - ERROR_LABEL_CLOSURE
 - ERROR_LABEL_DIRECTION
@@ -139,6 +167,28 @@ Wichtige Eigenschaften:
 - anonym (kein playerName)
 - Duplikat-Schutz: gleicher Score wird nicht erneut gespeichert
 - latestSavedScore wird bei Dupes trotzdem gesetzt, damit Ranking-Hinweis weiter funktioniert
+
+## Language Gate und App-Reset
+
+### Language Gate (index.vue)
+
+- showLanguageGate: lokal in index.vue, initial true
+- hasTouchedGate: useState (geteilt mit default.vue), initial false
+- Ablauf: Tap → hasTouchedGate = true (zeigt Sprachbuttons) → Sprache wählen → showLanguageGate = false
+- Nach Sprachauswahl: CmDraw zeigt Intro (showIntro-Prop), Language Gate verschwindet
+
+### App-Reset (default.vue + index.vue)
+
+- Klick auf Logo-Button in default.vue: hasTouchedGate = false
+- watch(hasTouchedGate) in index.vue reagiert: showLanguageGate = true, resetGameRound(), resetLatestSavedScore()
+- Ergebnis: App kehrt zu "Tap to start" zurück, Spielzustand komplett geleert
+
+## Tooltip-Info (index.vue)
+
+- Wird angezeigt wenn: hasResult && !showErrorLabel && result?.label && !isTooltipDismissed
+- isTooltipDismissed: ref, wird bei neuem Ergebnis (watch result) auf false zurückgesetzt
+- dismissTooltip(): setzt isTooltipDismissed = true
+- Einganganimation mit transition-delay: 780ms (scale), animation-delay: 1060ms (header/body)
 
 ## Ablauf einer Runde
 
@@ -172,7 +222,7 @@ Beim Neustart werden sowohl Runde als auch latestSavedScore zurueckgesetzt.
 - GUIDE_RADIUS_FACTOR = 0.45
 - GUIDE_FADE_OUT_MS = 900
 - SCORE_WEIGHT_CLOSURE = 0.1
-- FINAL_CLOSURE_ERROR_THRESHOLD = 0.18
+- FINAL_CLOSURE_ERROR_THRESHOLD = 0.1
 - DIRECTION_MIN_SEGMENT = 1
 - DIRECTION_MIN_ANGLE_DELTA = 0.02
 - DIRECTION_MIN_ANGLE_DELTA_FLOOR = 0.0012
@@ -202,7 +252,7 @@ Aktiv sind vier harte Fehlerfaelle:
   Sofortiger Abbruch im Lifecycle, Label aus ERROR_LABEL_TIMEOUT().
 
 3. Offener Kreis
-  In createRoundResult(): closureError > 0.18 fuehrt zu score = 0 und ERROR_LABEL_CLOSURE().
+  In createRoundResult(): closureError > 0.1 fuehrt zu score = 0 und ERROR_LABEL_CLOSURE().
 
 4. Nicht auswertbare Kreisform
   Wenn Metrics oder Live-Score nicht berechenbar sind, score = 0 und ERROR_LABEL_INVALID_FORM().
