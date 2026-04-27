@@ -236,6 +236,11 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     options.redraw();
   }
 
+  function resetToStartScreen() {
+    hasStarted.value = false;
+    resetRound();
+  }
+
   function resetForResize() {
     clearRoundTimeout();
     clearRoundTick();
@@ -261,6 +266,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     moveRound,
     endRound,
     resetRound,
+    resetToStartScreen,
     resetForResize,
   };
 }

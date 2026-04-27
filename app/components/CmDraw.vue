@@ -4,6 +4,10 @@
       <canvas :ref="setCanvasEl" class="circle-canvas" @pointerdown="emit('start-round', $event)" @pointermove="emit('move-round', $event)" @pointerup="emit('end-round', $event)" @pointercancel="emit('end-round', $event)" />
 
       <Transition name="fade">
+        <img v-if="showIntro && !hasStarted" class="intro-circle" src="/intro-circle.svg" alt="" aria-hidden="true" />
+      </Transition>
+
+      <Transition name="fade">
         <div v-if="showIntro && !hasStarted" class="intro-copy">
           <span v-html="t('game.intro').replace('\n', '<br />')"></span>
           <button class="btn" @click="emit('start-game')">{{ t("game.start") }}</button>
@@ -61,7 +65,7 @@ const props = defineProps<{
 }>();
 
 const shouldShowConfetti = computed(() => {
-  return props.hasResult && !props.showErrorLabel && (props.resultScore ?? 0) >= 90;
+  return (props.hasResult && !props.showErrorLabel && (props.resultScore ?? 0) >= 90) || props.isNewHighscore;
 });
 
 const emit = defineEmits<{
@@ -169,6 +173,21 @@ const emit = defineEmits<{
   line-height: 105%;
 
   z-index: 3;
+}
+
+.intro-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 95%;
+  height: auto;
+  max-width: 95%;
+  max-height: 95%;
+
+  z-index: 2;
+  pointer-events: none;
 }
 
 .timer-overlay {

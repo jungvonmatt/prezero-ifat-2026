@@ -8,6 +8,7 @@ interface UseCanvasRendererOptions {
   getPoints: () => StrokePoint[];
   getIsDrawing: () => boolean;
   getRoundStartAt: () => number | null;
+  getStrokeWidthScale?: () => number;
   guideRadiusFactor: number;
   guideFadeOutMs: number;
   drawStroke: (ctx: CanvasRenderingContext2D, points: StrokePoint[], drawContext: DrawContext) => void;
@@ -67,7 +68,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     const guideOpacity =
       options.getIsDrawing() && roundStartAt !== null
         ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
-        : 1;
+        : 0;
 
     ctx.strokeStyle = getCssVar("--color-off-white", "#f0f0f0");
 
@@ -87,6 +88,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
         centerX,
         centerY,
         targetRadius,
+        strokeWidthScale: clamp(options.getStrokeWidthScale ? options.getStrokeWidthScale() : 1, 0.25, 4),
       };
       options.drawStroke(ctx, points, drawContext);
     }

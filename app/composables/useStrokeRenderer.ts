@@ -9,6 +9,7 @@ export interface DrawContext {
   centerX: number;
   centerY: number;
   targetRadius: number;
+  strokeWidthScale?: number;
 }
 
 const MIN_STROKE_WIDTH = 2.5;
@@ -110,6 +111,8 @@ export function useStrokeRenderer() {
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
 
+    const strokeWidthScale = clamp(_context?.strokeWidthScale ?? 1, 0.25, 4);
+
     let previousWidth = getSegmentWidth(points[0]!, points[1]!);
     let previousColor = getSegmentColor(points[0]!, points[1]!);
     let smoothedSpeedRatio = getSpeedRatio(points[0]!, points[1]!);
@@ -159,7 +162,7 @@ export function useStrokeRenderer() {
       ctx.strokeStyle = gradient;
 
       // Normale Linie
-      ctx.lineWidth = width;
+      ctx.lineWidth = width * strokeWidthScale;
       ctx.beginPath();
       ctx.moveTo(renderX, renderY);
       ctx.lineTo(smoothedTo.x, smoothedTo.y);

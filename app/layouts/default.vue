@@ -2,7 +2,7 @@
   <div class="app-viewport-fit" :class="{ 'app-viewport-fit--scaled': enableViewportFit }">
     <div ref="viewportContent" class="app-viewport-content" :style="viewportStyle">
       <div class="site-shell">
-        <header v-if="isAdminRoute || hasTouchedGate" class="site-header">
+        <header class="site-header">
           <button class="brand-logo" aria-label="App zurücksetzen" @click="resetApp">
             <img src="/logo.svg" alt="Logo" />
           </button>
@@ -12,8 +12,8 @@
           <slot />
           <footer class="footer">
             <nav>
-              <NuxtLink v-if="isAdminRoute" to="/">Back to game</NuxtLink>
-              <NuxtLink v-else to="/admin">Admin</NuxtLink>
+              <!-- <button v-if="isAdminRoute" type="button" @click="resetApp">Back to game</button> -->
+              <NuxtLink v-if="!isAdminRoute" to="/admin">Admin</NuxtLink>
             </nav>
           </footer>
         </main>
@@ -30,9 +30,11 @@ const enableViewportFit = import.meta.dev;
 const route = useRoute();
 const isAdminRoute = computed(() => route.path === "/admin");
 const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
+const appResetSignal = useState<number>("appResetSignal", () => 0);
 
 function resetApp() {
   hasTouchedGate.value = false;
+  appResetSignal.value += 1;
   navigateTo("/");
 }
 

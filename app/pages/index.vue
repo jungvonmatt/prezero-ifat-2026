@@ -1,25 +1,18 @@
 <template>
   <div class="game-grid">
-    <div v-if="showLanguageGate" class="language-gate" @pointerdown="handleGateTouch">
-      <div class="language-gate-content">
-        
-        <!-- Tap to start -->
-        <Transition name="fade">
-          <div v-if="!hasTouchedGate" class="tap-actions">
-            <img class="language-gate-logo" src="/logo.svg" alt="PreZero" />
-            <p class="language-gate-title">Tap to start</p>
-          </div>
-        </Transition>
 
-        <!-- Language selection buttons -->
-        <Transition name="fade">
-          <div v-if="hasTouchedGate" class="language-gate-actions">
-            <button class="btn language-btn" @click.stop="selectLanguage('de')">Deutsch</button>
-            <button class="btn language-btn" @click.stop="selectLanguage('en')">English</button>
-          </div>
-        </Transition>
+    <Transition name="fade">
+      <div v-if="!hasStarted" class="language-gate-actions">
+        <button class="btn language-btn" @click.stop="selectLanguage('de')">
+          <img class="language-flag" src="/flagge-de.svg" alt="" aria-hidden="true" />
+          <span>Deutsch</span>
+        </button>
+        <button class="btn language-btn" @click.stop="selectLanguage('en')">
+          <img class="language-flag" src="/flagge-en.svg" alt="" aria-hidden="true" />
+          <span>English</span>
+        </button>
       </div>
-    </div>
+    </Transition>
 
     <!-- Tooltip-Info - show if result -->
     <div>
@@ -45,10 +38,9 @@
     </div>
 
     <CmDraw
-      :class="{ 'game-content-hidden': showLanguageGate }"
       :set-canvas-wrap-el="setCanvasWrapEl"
       :set-canvas-el="setCanvasEl"
-      :show-intro="!showLanguageGate"
+      :show-intro="true"
       :has-started="hasStarted"
       :is-drawing="isDrawing"
       :has-result="hasResult"
@@ -66,7 +58,7 @@
       @end-round="endRound"
     />
 
-    <aside v-if="!showLanguageGate && Boolean(result)" class="sidebar">
+    <aside v-if="Boolean(result)" class="sidebar">
       <h2>{{ t("highscores.title") }}</h2>
       <span v-if="isLocalMode" class="local-badge">{{ t("highscores.localBadge") }}</span>
       <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" :latest-saved-score="latestSavedScore" :result-label="result?.label" />
@@ -81,14 +73,15 @@ import { useHighscores } from "../composables/useHighscores";
 import type { Locale } from "../composables/useLocale";
 import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT } from "../composables/useCircleScoring";
 import { useLocale } from "../composables/useLocale";
+import { INACTIVITY_TIMEOUT_MS } from "../constants/game";
 
-const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLeftMs, hasResult, scoreDisplayText, timerText, timerDashoffset, startGame, startRound, moveRound, endRound, resetRound: resetGameRound } = useCircleGame();
+const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLeftMs, hasResult, scoreDisplayText, timerText, timerDashoffset, startGame, startRound, moveRound, endRound, resetRound: resetGameRound, resetToStartScreen: resetGameToStartScreen } = useCircleGame();
 
 const { highscores, isSaving, isLocalMode, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({ result });
 const { t, setLocale } = useLocale();
+const appResetSignal = useState<number>("appResetSignal", () => 0);
 
-const showLanguageGate = ref(true);
-const hasTouchedGate = useState<boolean>("hasTouchedGate", () => false);
+let inactivityTimeoutId: number | null = null;
 
 const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT()]));
 
@@ -102,15 +95,6 @@ const showErrorLabel = computed(() => {
 function dismissTooltip() {
   isTooltipDismissed.value = true;
 }
-
-// Reset entire app when logo is clicked
-watch(hasTouchedGate, (newValue) => {
-  if (!newValue && !showLanguageGate.value) {
-    showLanguageGate.value = true;
-    resetGameRound();
-    resetLatestSavedScore();
-  }
-});
 
 watch(result, (nextResult) => {
   isTooltipDismissed.value = false;
@@ -137,14 +121,67 @@ function resetRound() {
   resetLatestSavedScore();
 }
 
-function handleGateTouch() {
-  if (hasTouchedGate.value) return;
-  hasTouchedGate.value = true;
+function resetToStartScreen() {
+  resetGameToStartScreen();
+  resetLatestSavedScore();
+  isNewHighscore.value = false;
+  isTooltipDismissed.value = false;
 }
+
+function clearInactivityTimeout() {
+  if (inactivityTimeoutId === null) return;
+  window.clearTimeout(inactivityTimeoutId);
+  inactivityTimeoutId = null;
+}
+
+function restartInactivityTimeout() {
+  clearInactivityTimeout();
+  if (!hasStarted.value) return;
+
+  inactivityTimeoutId = window.setTimeout(() => {
+    resetToStartScreen();
+  }, INACTIVITY_TIMEOUT_MS);
+}
+
+function handleUserActivity() {
+  restartInactivityTimeout();
+}
+
+watch(
+  appResetSignal,
+  () => {
+    resetToStartScreen();
+  },
+  { flush: "post" },
+);
+
+watch(hasStarted, (started) => {
+  if (started) {
+    restartInactivityTimeout();
+    return;
+  }
+
+  clearInactivityTimeout();
+});
+
+onMounted(() => {
+  const activityEvents: Array<keyof WindowEventMap> = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"];
+  for (const eventName of activityEvents) {
+    window.addEventListener(eventName, handleUserActivity, { passive: true });
+  }
+});
+
+onBeforeUnmount(() => {
+  clearInactivityTimeout();
+
+  const activityEvents: Array<keyof WindowEventMap> = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"];
+  for (const eventName of activityEvents) {
+    window.removeEventListener(eventName, handleUserActivity);
+  }
+});
 
 function selectLanguage(locale: Locale) {
   setLocale(locale);
-  showLanguageGate.value = false;
 }
 </script>
 
@@ -204,32 +241,41 @@ article {
   cursor: pointer;
 }
 
-.language-gate-logo {
-  width: 480px;
-  height: auto;
-}
-
-.language-gate-title {
-  color: variables.$color-off-white;
-  font-family: fonts.$font-secondary-regular;
-  font-size: 56px;
-  line-height: 1;
-  pointer-events: none;
-}
-
 .language-gate-actions {
   position: absolute;
-  inset: 0;
+  left: 32px;
+  bottom: 32px;
+  z-index: 300;
 
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
   gap: 16px;
-  flex-wrap: wrap;
+  pointer-events: auto;
 }
 
 .language-btn {
+  width: 200px;
   min-width: 190px;
+  background-color: rgba(variables.$color-off-white, 0.20);
+  color: variables.$color-off-white;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+
+  padding-left: 32px;
+
+  gap: 16px;
+}
+
+.language-flag {
+  width: 32px;
+  height: 24px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .sidebar {
