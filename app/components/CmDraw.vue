@@ -16,7 +16,7 @@
 
       <div class="score-container">
         <Transition name="fade">
-          <p v-if="isDrawing || (!hasResult && hasStarted) || (hasResult && !showErrorLabel)" class="score-display" :class="{ 'has-result': hasResult }">{{ scoreDisplayText }}</p>
+          <p v-if="isDrawing || (!hasResult && hasStarted) || (hasResult)" class="score-display" :class="{ 'has-result': hasResult }">{{ scoreDisplayText }}</p>
         </Transition>
         <Transition name="fade">
           <p v-if="hasResult && isNewHighscore" class="highscore-hint">{{ t("game.highscore") }}</p>
