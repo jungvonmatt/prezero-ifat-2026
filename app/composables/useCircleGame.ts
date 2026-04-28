@@ -8,8 +8,8 @@ const ROUND_TIMEOUT_MS = 8000;
 const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
 const GUIDE_RADIUS_FACTOR = 0.45;
 const GUIDE_FADE_OUT_MS = 900;
-const INTRO_PREVIEW_DRAW_MS = 1750;
-const INTRO_PREVIEW_HOLD_MS = 500;
+const INTRO_PREVIEW_DRAW_MS = 2000;
+const INTRO_PREVIEW_HOLD_MS = 3000;
 const INTRO_PREVIEW_TOTAL_POINTS = 220;
 const INTRO_PREVIEW_STROKE_WIDTH_SCALE = 1.45;
 const SCORE_WEIGHT_CLOSURE = 0.1;
@@ -33,22 +33,25 @@ interface IntroPreviewVariant {
 }
 
 const INTRO_PREVIEW_DEFAULT_VARIANT: IntroPreviewVariant = {
-  radiusScale: 1,
+  radiusScale: 0.92,
   startAngle: -Math.PI / 2 - 0.4,
-  radialProfile: [1, 1.008, 0.995, 1.004, 1.011, 0.997, 0.992, 1.006, 1.003, 0.996, 1.009, 1],
+  // Gently drifts out on the right, slightly in on the bottom — one smooth wave
+  radialProfile: [1, 1.06, 1.14, 1.20, 1.17, 1.09, 0.99, 0.87, 0.79, 0.77, 0.84, 0.93, 1],
 };
 
 const INTRO_PREVIEW_VARIANTS: IntroPreviewVariant[] = [
   INTRO_PREVIEW_DEFAULT_VARIANT,
   {
-    radiusScale: 1.018,
+    radiusScale: 0.935,
     startAngle: -Math.PI / 2 + 0.8,
-    radialProfile: [1, 1.018, 1.006, 0.992, 1.011, 1.004, 0.989, 1.016, 1.002, 0.994, 1.008, 1.014],
+    // Slight inward drift on the left, fuller on the top-right
+    radialProfile: [1, 1.07, 1.16, 1.20, 1.14, 1.03, 0.89, 0.77, 0.75, 0.82, 0.92, 1.00, 1],
   },
   {
-    radiusScale: 0.985,
+    radiusScale: 0.91,
     startAngle: -Math.PI / 2 - 1.2,
-    radialProfile: [1, 0.994, 1.007, 1.013, 0.996, 0.989, 1.004, 1.011, 0.997, 0.992, 1.008, 1.003],
+    // Visible outward bulge on one side, pinch on the other
+    radialProfile: [1, 1.05, 1.12, 1.19, 1.22, 1.15, 1.01, 0.85, 0.76, 0.74, 0.82, 0.93, 1],
   },
 ];
 
@@ -286,29 +289,31 @@ export function useCircleGame() {
   }
 
   function buildIntroPreviewTemplatePoints(size: number, variant: IntroPreviewVariant): StrokePoint[] {
-    const pointsOut: StrokePoint[] = [];
-
-    const centerX = size / 2;
-    const centerY = size / 2;
+    const canvasCenterX = size / 2;
+    const canvasCenterY = size / 2;
     const baseRadius = size * GUIDE_RADIUS_FACTOR * variant.radiusScale;
     const startAngle = variant.startAngle;
     const sweep = Math.PI * 2;
     const segmentCount = INTRO_PREVIEW_TOTAL_POINTS;
 
+    const rawPoints: { x: number; y: number }[] = [];
     for (let index = 0; index <= segmentCount; index++) {
       const ratio = index / segmentCount;
       const theta = startAngle + sweep * ratio;
       const radialScale = sampleRadialProfile(variant.radialProfile, ratio);
       const radius = baseRadius * radialScale;
-
-      pointsOut.push({
-        x: centerX + Math.cos(theta) * radius,
-        y: centerY + Math.sin(theta) * radius,
-        time: index * 9,
-      });
+      rawPoints.push({ x: Math.cos(theta) * radius, y: Math.sin(theta) * radius });
     }
 
-    return pointsOut;
+    // Shift so the centroid of the distorted shape sits at the canvas center
+    const centroidX = rawPoints.reduce((s, p) => s + p.x, 0) / rawPoints.length;
+    const centroidY = rawPoints.reduce((s, p) => s + p.y, 0) / rawPoints.length;
+
+    return rawPoints.map((p, index) => ({
+      x: canvasCenterX + p.x - centroidX,
+      y: canvasCenterY + p.y - centroidY,
+      time: index * 9,
+    }));
   }
 
   function stopIntroPreviewLoop() {
