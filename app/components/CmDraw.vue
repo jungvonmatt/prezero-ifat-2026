@@ -9,7 +9,7 @@
 
       <Transition name="fade">
         <div v-if="showIntro && !hasStarted" class="intro-copy">
-          <span v-html="t('game.intro').replace('\n', '<br />')"></span>
+          <span v-html="(t('game.intro') as string).replace('\n', '<br />')"></span>
           <button class="btn" @click="emit('start-game')">{{ t("game.start") }}</button>
         </div>
       </Transition>

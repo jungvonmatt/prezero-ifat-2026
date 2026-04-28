@@ -10,7 +10,7 @@ export interface Point {
 
 export interface RoundResult {
   score: number;
-  label: string;
+  label: string | undefined;
   radialError: number;
   radiusFitError: number;
   closureError: number;
@@ -37,25 +37,40 @@ export function normalizeAngleDelta(delta: number) {
   return delta;
 }
 
-export const ERROR_LABEL_INVALID_FORM = () => t("errors.invalidForm");
-export const ERROR_LABEL_CLOSURE = () => t("errors.closure");
-export const ERROR_LABEL_DIRECTION = () => t("errors.direction");
-export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout");
+export const ERROR_LABEL_INVALID_FORM = () => t("errors.invalidForm") as string;
+export const ERROR_LABEL_CLOSURE = () => t("errors.closure") as string;
+export const ERROR_LABEL_DIRECTION = () => t("errors.direction") as string;
+export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout") as string;
+
+let labelRotationIndex = 0;
+
+export function incrementLabelRotation() {
+  labelRotationIndex++;
+}
+
+export function getLabelRotationIndex() {
+  return labelRotationIndex;
+}
 
 export function getLabel(score: number) {
   console.log("Calculating label for score:", score);
-  if (score >= 100) return t("score.label100");
-  if (score >= 90) return t("score.label90");
-  if (score >= 80) return t("score.label80");
-  if (score >= 70) return t("score.label70");
-  if (score >= 60) return t("score.label60");
-  if (score >= 50) return t("score.label50");
-  if (score >= 40) return t("score.label40");
-  if (score >= 30) return t("score.label30");
-  if (score >= 20) return t("score.label20");
-  if (score >= 10) return t("score.label10");
-  if (score >= 0) return t("score.label0");
-  return t("score.label0");
+  const variants = getLabelVariants(score);
+  const index = labelRotationIndex % 3;
+  return variants[index];
+}
+
+function getLabelVariants(score: number): string[] {
+  if (score >= 100) return t("score.label100") as unknown as string[];
+  if (score >= 90) return t("score.label90") as unknown as string[];
+  if (score >= 80) return t("score.label80") as unknown as string[];
+  if (score >= 70) return t("score.label70") as unknown as string[];
+  if (score >= 60) return t("score.label60") as unknown as string[];
+  if (score >= 50) return t("score.label50") as unknown as string[];
+  if (score >= 40) return t("score.label40") as unknown as string[];
+  if (score >= 30) return t("score.label30") as unknown as string[];
+  if (score >= 20) return t("score.label20") as unknown as string[];
+  if (score >= 10) return t("score.label10") as unknown as string[];
+  return t("score.label0") as unknown as string[];
 }
 
 function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
@@ -155,7 +170,7 @@ export function calculateLiveScore(rawStrokePoints: StrokePoint[], logicalSize: 
   const closureWeight = closureWeightBase * coverageProgress * coverageProgress;
 
   const liveError = clamp(radiusFitError * 0.62 + radialError * 0.3 + closureError * closureWeight, 0, 1);
-  const liveScore = Math.pow(1 - liveError, 0.72) * 100;
+  const liveScore = Math.pow(1 - liveError, 2.0) * 100;
 
   return clamp(liveScore, 0, 100);
 }

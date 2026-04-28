@@ -59,7 +59,7 @@
     <aside v-if="Boolean(result)" class="sidebar">
       <h2>{{ t("highscores.title") }}</h2>
       <span v-if="isLocalMode" class="local-badge">{{ t("highscores.localBadge") }}</span>
-      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" :latest-saved-score="latestSavedScore" :result-label="result?.label" />
+      <CmHighscore :highscores="highscores" :is-local-mode="isLocalMode" :latest-saved-score="latestSavedScore" :result-label="result?.label" :result-is-error="showErrorLabel" />
       <button class="btn restart" @click="resetRound">{{ t("game.restart") }}</button>
     </aside>
   </div>
@@ -69,7 +69,7 @@
 import { useCircleGame } from "../composables/useCircleGame";
 import { useHighscores } from "../composables/useHighscores";
 import type { Locale } from "../composables/useLocale";
-import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT } from "../composables/useCircleScoring";
+import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, getLabelRotationIndex } from "../composables/useCircleScoring";
 import { useLocale } from "../composables/useLocale";
 import { INACTIVITY_TIMEOUT_MS } from "../constants/game";
 
@@ -85,10 +85,19 @@ const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), 
 
 const isNewHighscore = ref(false);
 const isTooltipDismissed = ref(false);
-const tooltipLabel = computed(() => showErrorLabel.value ? t("score.label0") : (result.value?.label ?? ""));
+
 const showErrorLabel = computed(() => {
   const label = result.value?.label;
   return Boolean(label && RESULT_ERROR_LABELS.value.has(label));
+});
+
+const tooltipLabel = computed(() => {
+  if (showErrorLabel.value) {
+    const errorVariants = t("score.label0") as unknown as string[];
+    const index = getLabelRotationIndex() % 3;
+    return errorVariants[index];
+  }
+  return result.value?.label ?? "";
 });
 
 function dismissTooltip() {
@@ -109,7 +118,7 @@ watch(result, (nextResult) => {
 
   isNewHighscore.value = nextResult.score > bestExistingScore;
 
-  if (!RESULT_ERROR_LABELS.value.has(nextResult.label) && !isSaving.value) {
+  if (!RESULT_ERROR_LABELS.value.has(nextResult.label ?? "") && !isSaving.value) {
     // Save successful rounds automatically without user input.
     void saveScore();
   }

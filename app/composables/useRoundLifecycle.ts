@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue";
 import type { Point, RoundResult } from "./useCircleScoring";
-import { clamp, normalizeAngleDelta, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT } from "./useCircleScoring";
+import { clamp, normalizeAngleDelta, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, incrementLabelRotation } from "./useCircleScoring";
 import type { StrokePoint } from "./useStrokeRenderer";
 
 interface UseRoundLifecycleOptions {
@@ -84,6 +84,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     resetRoundClock();
     resetTransientState();
     releasePointerCapture(pointerId);
+    incrementLabelRotation();
 
     result.value = {
       score: 0,
@@ -108,6 +109,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     roundTimeLeftMs.value = 0;
     resetTransientState();
     releasePointerCapture(pointerId);
+    incrementLabelRotation();
 
     result.value = {
       score: 0,

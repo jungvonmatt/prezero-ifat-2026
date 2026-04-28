@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, type Point, type RoundResult } from "./useCircleScoring";
+import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, incrementLabelRotation, type Point, type RoundResult } from "./useCircleScoring";
 import { useCanvasRenderer } from "./useCanvasRenderer";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useStrokeRenderer, type StrokePoint } from "./useStrokeRenderer";
@@ -71,6 +71,7 @@ export function useCircleGame() {
     const score = calculateLiveScore(currentPoints, logicalSize.value, GUIDE_RADIUS_FACTOR, SCORE_WEIGHT_CLOSURE);
 
     if (score === null || !completionMetrics) {
+      incrementLabelRotation();
       return {
         score: 0,
         label: ERROR_LABEL_INVALID_FORM(),
@@ -87,6 +88,7 @@ export function useCircleGame() {
     }
 
     if (completionMetrics.closureError > FINAL_CLOSURE_ERROR_THRESHOLD) {
+      incrementLabelRotation();
       return {
         score: 0,
         label: ERROR_LABEL_CLOSURE(),
@@ -109,6 +111,8 @@ export function useCircleGame() {
         note: "final-score uses calculateLiveScore()",
       });
     }
+
+    incrementLabelRotation();
 
     return {
       score,

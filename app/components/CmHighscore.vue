@@ -22,10 +22,11 @@
 
     <!-- ranking info -->
     <div class="ranking">
-      <p v-if="currentRank && currentRank <= 3" class="ranking-info">{{ t("highscores.rankTop", { rank: currentRank }) }}</p>
+      <p v-if="resultIsError" class="ranking-info">{{ t("highscores.noRanking") }}</p>
+      <p v-else-if="currentRank && currentRank <= 3" class="ranking-info">{{ t("highscores.rankTop", { rank: currentRank }) }}</p>
       <p v-else-if="currentRank && currentRank > 3 && currentTopPercent !== null" class="ranking-info">{{ t("highscores.rankPercent", { rank: currentRank, percent: currentTopPercent }) }}</p>
       <p v-else class="ranking-info">{{ t("highscores.noRanking") }}</p>
-      <p v-if="resultLabel && !currentRank" class="ranking-error-hint">{{ resultLabel }}</p>
+      <p v-if="resultLabel && resultIsError" class="ranking-error-hint">{{ resultLabel }}</p>
     </div>
   </article>
 </template>
@@ -46,6 +47,7 @@ const props = defineProps<{
   isLocalMode: boolean;
   latestSavedScore: number | null;
   resultLabel?: string;
+  resultIsError?: boolean;
 }>();
 
 const currentRank = computed<number | null>(() => {

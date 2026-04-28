@@ -64,9 +64,14 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     const centerX = logicalSize.value / 2;
     const centerY = logicalSize.value / 2;
     const targetRadius = logicalSize.value * options.guideRadiusFactor;
+    const points = options.getPoints();
+    const isDrawing = options.getIsDrawing();
     const roundStartAt = options.getRoundStartAt();
-    const guideOpacity =
-      options.getIsDrawing() && roundStartAt !== null
+    const idleGuideVisible = !isDrawing && points.length === 0;
+    const drawingGuideVisible = isDrawing && roundStartAt !== null;
+    const guideOpacity = idleGuideVisible
+      ? 1
+      : drawingGuideVisible
         ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
         : 0;
 
@@ -82,7 +87,6 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     ctx.setLineDash([]);
     ctx.restore();
 
-    const points = options.getPoints();
     if (points.length > 1) {
       const drawContext: DrawContext = {
         centerX,
