@@ -159,11 +159,9 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     options.redraw();
   }
 
-  function moveRound(event: PointerEvent) {
-    if (!isDrawing.value || activePointerId.value !== event.pointerId) return;
-
-    const point = options.pointFromPointer(event);
-    if (!point) return;
+  function processMovePoint(pointerEvent: PointerEvent): boolean {
+    const point = options.pointFromPointer(pointerEvent);
+    if (!point) return true;
 
     const logicalSize = options.getLogicalSize();
     const pointCount = points.value.length;
@@ -200,8 +198,8 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
               } else if (rotationDirection.value !== nextDirection) {
                 oppositeTurnStreak.value += 1;
                 if (oppositeTurnStreak.value >= options.directionOppositeStreakToAbort) {
-                  abortRoundForDirectionChange(event.pointerId);
-                  return;
+                  abortRoundForDirectionChange(pointerEvent.pointerId);
+                  return false;
                 }
               } else {
                 oppositeTurnStreak.value = 0;
@@ -212,8 +210,18 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
       }
     }
 
-    const strokePoint = options.toStrokePoint(point, event.pressure);
+    const strokePoint = options.toStrokePoint(point, pointerEvent.pressure);
     points.value.push(strokePoint);
+    return true;
+  }
+
+  function moveRound(event: PointerEvent) {
+    if (!isDrawing.value || activePointerId.value !== event.pointerId) return;
+
+    const coalescedEvents = event.getCoalescedEvents?.() ?? [event];
+    for (const coalescedEvent of coalescedEvents) {
+      if (!processMovePoint(coalescedEvent)) return;
+    }
     options.redraw();
   }
 

@@ -20,6 +20,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
   const logicalSize = ref(0);
   let ctx: CanvasRenderingContext2D | null = null;
   let dpr = 1;
+  let redrawRafId: number | null = null;
 
   function setCanvasWrapEl(value: Element | ComponentPublicInstance | null) {
     canvasWrapEl.value = value as HTMLDivElement | null;
@@ -98,6 +99,14 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     }
   }
 
+  function scheduleRedraw() {
+    if (redrawRafId !== null) return;
+    redrawRafId = requestAnimationFrame(() => {
+      redrawRafId = null;
+      redraw();
+    });
+  }
+
   function pointFromPointer(event: PointerEvent): Point | null {
     if (!canvasEl.value || !logicalSize.value) return null;
 
@@ -120,6 +129,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     setCanvasEl,
     configureCanvas,
     redraw,
+    scheduleRedraw,
     pointFromPointer,
   };
 }

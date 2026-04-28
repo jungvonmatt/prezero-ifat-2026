@@ -136,6 +136,7 @@ export function useCircleGame() {
     setCanvasEl,
     configureCanvas,
     redraw,
+    scheduleRedraw,
     pointFromPointer,
   } = useCanvasRenderer({
     getPoints: () => {
@@ -187,7 +188,7 @@ export function useCircleGame() {
     getLogicalSize: () => logicalSize.value,
     pointFromPointer,
     toStrokePoint,
-    redraw,
+    redraw: scheduleRedraw,
     evaluateRound: createRoundResult,
   });
 
