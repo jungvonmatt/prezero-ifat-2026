@@ -5,11 +5,9 @@
       <div v-if="!hasStarted" class="language-gate-actions">
         <button class="btn language-btn" @click.stop="selectLanguage('de')">
           <img class="language-flag" src="/flagge-de.svg" alt="" aria-hidden="true" />
-          <span>Deutsch</span>
         </button>
         <button class="btn language-btn" @click.stop="selectLanguage('en')">
           <img class="language-flag" src="/flagge-en.svg" alt="" aria-hidden="true" />
-          <span>English</span>
         </button>
       </div>
     </Transition>
@@ -17,7 +15,7 @@
     <!-- Tooltip-Info - show if result -->
     <div>
       <Transition name="tooltip">
-        <div v-if="hasResult && !showErrorLabel && result?.label && !isTooltipDismissed" class="tooltip-info">
+        <div v-if="hasResult && result?.label && !isTooltipDismissed" class="tooltip-info">
           <div class="tooltip-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60" fill="none">
               <path
@@ -32,7 +30,7 @@
               </svg>
             </button>
           </div>
-          <p class="tooltip-body">{{ result.label }}</p>
+          <p class="tooltip-body">{{ tooltipLabel }}</p>
         </div>
       </Transition>
     </div>
@@ -87,6 +85,7 @@ const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), 
 
 const isNewHighscore = ref(false);
 const isTooltipDismissed = ref(false);
+const tooltipLabel = computed(() => showErrorLabel.value ? t("score.label0") : (result.value?.label ?? ""));
 const showErrorLabel = computed(() => {
   const label = result.value?.label;
   return Boolean(label && RESULT_ERROR_LABELS.value.has(label));
@@ -256,8 +255,6 @@ article {
 }
 
 .language-btn {
-  width: 200px;
-  min-width: 190px;
   background-color: rgba(variables.$color-off-white, 0.20);
   color: variables.$color-off-white;
 
@@ -266,7 +263,8 @@ article {
   justify-content: flex-start;
   text-align: left;
 
-  padding-left: 32px;
+  padding-left: 40px;
+  padding-right: 40px;
 
   gap: 16px;
 }
