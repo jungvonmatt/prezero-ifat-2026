@@ -1,6 +1,6 @@
 # Circle Game: Architektur, Verdrahtung und Score-Logik
 
-Stand: 27.04.2026
+Stand: 28.04.2026
 
 ## Zweck dieser Datei
 
@@ -132,7 +132,8 @@ Aufgabe:
 - Pointer in Canvas-Koordinaten umrechnen
 
 Aktuelles Guide-Verhalten:
-- Der gestrichelte Guide-Kreis wird nur waehrend des aktiven Zeichnens gerendert.
+- Der gestrichelte Guide-Kreis ist sichtbar, wenn keine aktive Runde gezeichnet wird und keine Punkte vorhanden sind (Idle-Zustand nach Start).
+- Waehren des aktiven Zeichnens blendet der Guide-Kreis innerhalb von `GUIDE_FADE_OUT_MS` weich aus.
 - Vor Spielstart bleibt der Canvas-Guide unsichtbar; stattdessen zeigt `CmDraw.vue` das Intro-SVG.
 
 ### useRoundLifecycle
@@ -143,6 +144,7 @@ Aufgabe:
 - Timeout und Tick-Timer steuern
 - Pointer-Capture setzen/loesen
 - Richtungswechsel erkennen und Runde abbrechen
+- Auto-Complete waehrend des Zeichnens pruefen (Coverage/Closure + Hard-Stop)
 - Runde starten/bewegen/beenden/resetten
 - Rueckkehr auf den Start-Screen via `resetToStartScreen()`
 
@@ -226,6 +228,9 @@ CmDraw emittiert `start-round`. `useRoundLifecycle.startRound()` legt den ersten
 CmDraw emittiert `move-round`. `useRoundLifecycle.moveRound()` fuegt Punkte hinzu und prueft Richtungswechsel.
 Bei Gegenrichtung wird die Runde mit Fehlerlabel sofort beendet.
 
+Zusatz: waehrend `moveRound()` wird ausserdem ein Auto-Complete geprueft.
+Die Runde wird beendet, wenn `(coverageDegrees >= AUTO_COMPLETE_COVERAGE_DEGREES_THRESHOLD && closureError <= AUTO_COMPLETE_CLOSURE_ERROR_THRESHOLD) || rawCoverageDegrees >= AUTO_COMPLETE_RAW_COVERAGE_DEGREES_HARD_STOP_THRESHOLD`.
+
 ### 4. Ende
 
 CmDraw emittiert `end-round`. `useRoundLifecycle.endRound()` stoppt Timer/Timeout und ruft `evaluateRound` (aus `useCircleGame`) auf.
@@ -262,6 +267,9 @@ Fuer Rueckkehr zum Start-Screen:
 - DIRECTION_MIN_ANGLE_DELTA_RATIO = 0.35
 - DIRECTION_MIN_CENTER_DISTANCE_FACTOR = 0.12
 - DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1
+- AUTO_COMPLETE_COVERAGE_DEGREES_THRESHOLD = 356
+- AUTO_COMPLETE_CLOSURE_ERROR_THRESHOLD = 0.2
+- AUTO_COMPLETE_RAW_COVERAGE_DEGREES_HARD_STOP_THRESHOLD = 540
 - ENABLE_SCORE_DEBUG = import.meta.dev
 
 Weitere zentrale Konstante:
@@ -276,6 +284,7 @@ Weitere zentrale Konstante:
 3. `closureError` (Start-/Endabstand), gewichtet mit `coverageProgress`
 
 Ergebnis ist ein nichtlinear rueckgerechneter Prozentwert (0-100), der waehrend des Zeichnens live angezeigt wird.
+Aktuell wird fuer den finalen Prozentwert eine Quadratik verwendet (`Math.pow(1 - liveError, 2.0) * 100`), um die Verteilung ueber 0-100 staerker zu spreizen.
 
 ### Harte Fehlerfaelle
 
@@ -292,6 +301,32 @@ Aktiv sind vier harte Fehlerfaelle:
 
 4. Nicht auswertbare Kreisform  
    Wenn Metrics oder Live-Score nicht berechenbar sind, `score = 0` und `ERROR_LABEL_INVALID_FORM()`.
+
+Hinweis: Der Auto-Complete-Close-Schwellwert (0.2) und der finale Closure-Fehlerschwellwert (0.1) sind absichtlich getrennt.
+Damit kann eine Runde frueher technisch enden, waehrend die finale Gueltigkeit weiterhin strenger geprueft wird.
+
+## Aenderungen vom 28.04.2026
+
+1. Score-Label-Rotation
+- Score-Labels (`score.label0` bis `score.label100`) sind jetzt als Arrays mit 3 Varianten hinterlegt.
+- `useCircleScoring.getLabel()` rotiert global ueber `labelRotationIndex % 3`.
+- Typen in `app/locales/types.ts` sind auf `string[]` pro Label aktualisiert.
+
+2. Tooltip-/Ergebnislabel
+- `index.vue` nutzt fuer den Tooltip dieselbe Rotationslogik.
+- Bei Error-Ergebnissen wird fuer den Tooltip die rotierende `score.label0`-Variante verwendet.
+
+3. Guide-Sichtbarkeit
+- Guide-Kreis ist im Idle-Zustand nach Spielstart sichtbar (wenn nicht gezeichnet wird und keine Punkte vorhanden sind).
+- Beim Zeichnen blendet der Guide weiterhin weich aus.
+
+4. Auto-Complete und Overlap
+- `StrokeCompletionMetrics` enthaelt zusaetzlich `rawCoverageDegrees` (ungecappt).
+- Soft-Complete: Coverage + Closure (`356` Grad und `0.2`).
+- Hard-Stop: bei `540` Grad Roh-Coverage (entspricht bis zu 1.5 Umdrehungen), um endloses Zeichnen zu verhindern.
+
+5. Score-Verteilung
+- Die Score-Kurve wurde auf Exponent `2.0` umgestellt, damit Ergebnisse weniger am oberen Ende clustern und die Bandbreite 0-100 besser genutzt wird.
 
 ## i18n-Status
 

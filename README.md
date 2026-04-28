@@ -7,13 +7,19 @@ Die App zeigt Live-Score waehrend des Zeichnens, bewertet die Runde nach Abschlu
 
 - Intro-Screen mit Sprachwahl (Deutsch/Englisch), zentralem `intro-circle.svg` und Demo-Kreis-Loop
 - Live-Score waehrend der Runde
-- Gestrichelter Guide-Kreis erscheint erst waehrend des aktiven Zeichnens
+- Gestrichelter Guide-Kreis ist im Idle-Zustand sichtbar und blendet waehrend des Zeichnens aus
 - Fehlererkennung fuer Richtungswechsel, Timeout, offenen Kreis und ungueltige Form
 - Automatisches, anonymes Speichern erfolgreicher Scores
 - Reset auf den Start-Screen per Logo-Klick oder nach Inaktivitaet
 - API-First mit LocalStorage-Fallback
 - Top-3-Visualisierung und Ranking-Hinweis
 - Leichtgewichtiges i18n (Deutsch/Englisch) ohne externes Modul
+
+## Heute geaendert (28.04.2026)
+
+- Score-Feedback rotiert jetzt in 3 Varianten pro Label (`score.label0` bis `score.label100`), fuer mehr textliche Abwechslung.
+- Auto-Complete/Overlap wurde toleranter eingestellt: Soft-Complete ueber Coverage+Closure, Hard-Stop bei 540 Grad (bis zu 1.5 Kreise).
+- Score-Verteilung wurde angepasst (Exponent 2.0), damit Ergebnisse ueber 0-100 gleichmaessiger verteilt sind.
 
 ## Setup
 
@@ -67,7 +73,7 @@ bun run dev
 
 - Vor Spielstart zeigt die Startseite Sprachbuttons links unten sowie ein zentriertes `intro-circle.svg`.
 - Parallel laeuft eine Demo-Kreis-Loop ueber den Canvas, bis der User das Spiel startet.
-- Der gestrichelte Guide-Kreis wird nicht auf dem Intro-Screen gezeigt, sondern erst waehrend des aktiven Zeichnens.
+- Der gestrichelte Guide-Kreis wird nicht auf dem Intro-Screen gezeigt, ist nach Spielstart im Idle sichtbar und blendet beim Zeichnen aus.
 - Klick auf das Logo setzt die App zurueck auf den Start-Screen.
 - Nach `INACTIVITY_TIMEOUT_MS` Inaktivitaet wird ebenfalls auf den Start-Screen mit Demo-Kreisen zurueckgesetzt.
 

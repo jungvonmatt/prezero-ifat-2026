@@ -4,7 +4,7 @@
       <div class="site-shell">
         <header class="site-header">
           <button class="brand-logo" aria-label="App zurücksetzen" @click="resetApp">
-            <img src="/logo.svg" alt="Logo" />
+            <img src="/logo.svg" alt="Logo Prezero" />
           </button>
         </header>
 
