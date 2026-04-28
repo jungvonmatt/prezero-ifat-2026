@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, incrementLabelRotation, type Point, type RoundResult } from "./useCircleScoring";
+import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_TOO_SMALL, incrementLabelRotation, type Point, type RoundResult } from "./useCircleScoring";
 import { useCanvasRenderer } from "./useCanvasRenderer";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useStrokeRenderer, type StrokePoint } from "./useStrokeRenderer";
@@ -22,7 +22,8 @@ const DIRECTION_MIN_CENTER_DISTANCE_FACTOR = 0.12;
 const DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1;
 const AUTO_COMPLETE_COVERAGE_DEGREES_THRESHOLD = 356;
 const AUTO_COMPLETE_CLOSURE_ERROR_THRESHOLD = 0.2;
-const AUTO_COMPLETE_RAW_COVERAGE_DEGREES_HARD_STOP_THRESHOLD = 540;
+const HARD_STOP_COVERAGE_DEGREES = 365;
+const MIN_CIRCLE_RADIUS_FACTOR = 0.2;
 const ENABLE_SCORE_DEBUG = import.meta.dev;
 
 interface IntroPreviewVariant {
@@ -87,6 +88,27 @@ export function useCircleGame() {
         guideSizeFailureError: 0,
         coverageFailureError: 0,
         coverageDegrees: 0,
+      };
+    }
+
+    const guideCenterX = logicalSize.value / 2;
+    const guideCenterY = logicalSize.value / 2;
+    const minRadius = logicalSize.value * MIN_CIRCLE_RADIUS_FACTOR;
+    const avgRadius = currentPoints.reduce((sum, p) => sum + Math.hypot(p.x - guideCenterX, p.y - guideCenterY), 0) / currentPoints.length;
+    if (avgRadius < minRadius) {
+      incrementLabelRotation();
+      return {
+        score: 0,
+        label: ERROR_LABEL_TOO_SMALL(),
+        radialError: 1,
+        radiusFitError: 1,
+        closureError: 1,
+        directionChangeError: 0,
+        timeoutError: 0,
+        centerFailureError: 0,
+        guideSizeFailureError: 1,
+        coverageFailureError: 0,
+        coverageDegrees: completionMetrics.coverageDegrees,
       };
     }
 
@@ -191,7 +213,8 @@ export function useCircleGame() {
     guideRadiusFactor: GUIDE_RADIUS_FACTOR,
     autoCompleteCoverageDegreesThreshold: AUTO_COMPLETE_COVERAGE_DEGREES_THRESHOLD,
     autoCompleteClosureErrorThreshold: AUTO_COMPLETE_CLOSURE_ERROR_THRESHOLD,
-    autoCompleteRawCoverageDegreesHardStopThreshold: AUTO_COMPLETE_RAW_COVERAGE_DEGREES_HARD_STOP_THRESHOLD,
+    hardStopCoverageDegrees: HARD_STOP_COVERAGE_DEGREES,
+    minCircleRadiusFactor: MIN_CIRCLE_RADIUS_FACTOR,
     getLogicalSize: () => logicalSize.value,
     pointFromPointer,
     toStrokePoint,

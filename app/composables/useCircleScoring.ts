@@ -42,6 +42,7 @@ export const ERROR_LABEL_INVALID_FORM = () => t("errors.invalidForm") as string;
 export const ERROR_LABEL_CLOSURE = () => t("errors.closure") as string;
 export const ERROR_LABEL_DIRECTION = () => t("errors.direction") as string;
 export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout") as string;
+export const ERROR_LABEL_TOO_SMALL = () => t("errors.tooSmall") as string;
 
 let labelRotationIndex = 0;
 

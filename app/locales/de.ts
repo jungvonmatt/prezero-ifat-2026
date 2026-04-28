@@ -10,6 +10,7 @@ export default {
     closure: "Schließe den Kreis!",
     direction: "Vermeide Richtungswechsel!",
     timeout: "Zeichne schneller!",
+    tooSmall: "Zeichne einen größeren Kreis!",
   },
   score: {
     label100: [

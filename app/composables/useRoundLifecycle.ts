@@ -15,7 +15,8 @@ interface UseRoundLifecycleOptions {
   guideRadiusFactor: number;
   autoCompleteCoverageDegreesThreshold: number;
   autoCompleteClosureErrorThreshold: number;
-  autoCompleteRawCoverageDegreesHardStopThreshold: number;
+  hardStopCoverageDegrees: number;
+  minCircleRadiusFactor: number;
   getLogicalSize: () => number;
   pointFromPointer: (event: PointerEvent) => Point | null;
   toStrokePoint: (point: Point, pressure?: number) => StrokePoint;
@@ -246,7 +247,21 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
 
     const hasEnoughCoverage = completionMetrics.coverageDegrees >= options.autoCompleteCoverageDegreesThreshold;
     const isNearlyClosed = completionMetrics.closureError <= options.autoCompleteClosureErrorThreshold;
-    const reachedHardStop = completionMetrics.rawCoverageDegrees >= options.autoCompleteRawCoverageDegreesHardStopThreshold;
+    const reachedHardStop = completionMetrics.rawCoverageDegrees >= options.hardStopCoverageDegrees;
+
+    // Once a quarter circle is drawn, check if the circle is too small.
+    // If so, stop immediately — createRoundResult will return a size error.
+    if (completionMetrics.rawCoverageDegrees >= 90) {
+      const logicalSize = options.getLogicalSize();
+      const guideCenterX = logicalSize / 2;
+      const guideCenterY = logicalSize / 2;
+      const minRadius = logicalSize * options.minCircleRadiusFactor;
+      const avgRadius = points.value.reduce((sum, p) => sum + Math.hypot(p.x - guideCenterX, p.y - guideCenterY), 0) / points.value.length;
+      if (avgRadius < minRadius) {
+        completeRound(event.pointerId);
+        return;
+      }
+    }
 
     if ((hasEnoughCoverage && isNearlyClosed) || reachedHardStop) {
       completeRound(event.pointerId);

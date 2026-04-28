@@ -69,7 +69,7 @@
 import { useCircleGame } from "../composables/useCircleGame";
 import { useHighscores } from "../composables/useHighscores";
 import type { Locale } from "../composables/useLocale";
-import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, getLabelRotationIndex } from "../composables/useCircleScoring";
+import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, ERROR_LABEL_TOO_SMALL, getLabelRotationIndex } from "../composables/useCircleScoring";
 import { useLocale } from "../composables/useLocale";
 import { INACTIVITY_TIMEOUT_MS } from "../constants/game";
 
@@ -81,7 +81,7 @@ const appResetSignal = useState<number>("appResetSignal", () => 0);
 
 let inactivityTimeoutId: number | null = null;
 
-const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT()]));
+const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT(), ERROR_LABEL_TOO_SMALL()]));
 
 const isNewHighscore = ref(false);
 const isTooltipDismissed = ref(false);

@@ -10,6 +10,7 @@ export default {
     closure: "Close the circle!",
     direction: "Avoid direction changes!",
     timeout: "Draw faster!",
+    tooSmall: "Draw a bigger circle!",
   },
   score: {
     label100: [

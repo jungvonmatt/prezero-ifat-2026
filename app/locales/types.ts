@@ -10,6 +10,7 @@ export interface LocaleMessages {
     closure: string;
     direction: string;
     timeout: string;
+    tooSmall: string;
   };
   score: {
     label100: string[];
