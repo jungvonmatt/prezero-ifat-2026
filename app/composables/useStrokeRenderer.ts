@@ -19,8 +19,6 @@ const STROKE_WIDTH_ALPHA_SLOW = 0.16;
 const STROKE_WIDTH_ALPHA_FAST = 0.05;
 const STROKE_COLOR_ALPHA_SLOW = 0.14;
 const STROKE_COLOR_ALPHA_FAST = 0.04;
-const STROKE_POINT_ALPHA_SLOW = 0.32;
-const STROKE_POINT_ALPHA_FAST = 0.1;
 const STROKE_START_COLOR = getCssVar("--core-color-green", "#a5c814");
 const STROKE_START_HSB = { hue: 72, saturation: 90, brightness: 78 };
 const STROKE_END_HSB = { hue: 72, saturation: 90, brightness: 78 }; // We keep the same HSB values - no matter how fast a user is drawing
@@ -116,8 +114,6 @@ export function useStrokeRenderer() {
     let previousWidth = getSegmentWidth(points[0]!, points[1]!);
     let previousColor = getSegmentColor(points[0]!, points[1]!);
     let smoothedSpeedRatio = getSpeedRatio(points[0]!, points[1]!);
-    let renderX = points[0]!.x;
-    let renderY = points[0]!.y;
 
     for (let index = 1; index < points.length; index++) {
       const from = points[index - 1];
@@ -132,31 +128,12 @@ export function useStrokeRenderer() {
       const width = lerp(previousWidth, currentWidth, lerp(STROKE_WIDTH_ALPHA_SLOW, STROKE_WIDTH_ALPHA_FAST, targetSpeedRatio));
       previousWidth = width;
 
-      const currentColor = (() => {
-        const colorAlpha = lerp(STROKE_COLOR_ALPHA_SLOW, STROKE_COLOR_ALPHA_FAST, targetSpeedRatio);
-        smoothedSpeedRatio = lerp(smoothedSpeedRatio, targetSpeedRatio, colorAlpha);
-        return getDynamicStrokeColorFromRatio(smoothedSpeedRatio);
-      })();
-
-      const smoothedTo = (() => {
-        const pointAlpha = lerp(STROKE_POINT_ALPHA_SLOW, STROKE_POINT_ALPHA_FAST, targetSpeedRatio);
-        return {
-          x: lerp(renderX, to.x, pointAlpha),
-          y: lerp(renderY, to.y, pointAlpha),
-        };
-      })();
-
-      const distance = Math.hypot(smoothedTo.x - renderX, smoothedTo.y - renderY);
-
-      if (distance < 0.35) {
-        previousColor = currentColor;
-        renderX = smoothedTo.x;
-        renderY = smoothedTo.y;
-        continue;
-      }
+      const colorAlpha = lerp(STROKE_COLOR_ALPHA_SLOW, STROKE_COLOR_ALPHA_FAST, targetSpeedRatio);
+      smoothedSpeedRatio = lerp(smoothedSpeedRatio, targetSpeedRatio, colorAlpha);
+      const currentColor = getDynamicStrokeColorFromRatio(smoothedSpeedRatio);
 
       // Sanfter Farbübergang pro Segment statt harter Farbsprünge.
-      const gradient = ctx.createLinearGradient(renderX, renderY, smoothedTo.x, smoothedTo.y);
+      const gradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
       gradient.addColorStop(0, previousColor);
       gradient.addColorStop(1, currentColor);
       ctx.strokeStyle = gradient;
@@ -164,13 +141,11 @@ export function useStrokeRenderer() {
       // Normale Linie
       ctx.lineWidth = width * strokeWidthScale;
       ctx.beginPath();
-      ctx.moveTo(renderX, renderY);
-      ctx.lineTo(smoothedTo.x, smoothedTo.y);
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
       ctx.stroke();
 
       previousColor = currentColor;
-      renderX = smoothedTo.x;
-      renderY = smoothedTo.y;
     }
   }
 

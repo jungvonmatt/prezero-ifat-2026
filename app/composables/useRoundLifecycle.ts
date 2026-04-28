@@ -20,6 +20,7 @@ interface UseRoundLifecycleOptions {
   pointFromPointer: (event: PointerEvent) => Point | null;
   toStrokePoint: (point: Point, pressure?: number) => StrokePoint;
   redraw: () => void;
+  scheduleRedraw: () => void;
   evaluateRound: (points: StrokePoint[]) => RoundResult;
 }
 
@@ -174,11 +175,9 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     result.value = options.evaluateRound(points.value);
   }
 
-  function moveRound(event: PointerEvent) {
-    if (!isDrawing.value || activePointerId.value !== event.pointerId) return;
-
+  function processPointEvent(event: PointerEvent): boolean {
     const point = options.pointFromPointer(event);
-    if (!point) return;
+    if (!point) return true;
 
     const logicalSize = options.getLogicalSize();
     const pointCount = points.value.length;
@@ -216,7 +215,7 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
                 oppositeTurnStreak.value += 1;
                 if (oppositeTurnStreak.value >= options.directionOppositeStreakToAbort) {
                   abortRoundForDirectionChange(event.pointerId);
-                  return;
+                  return false;
                 }
               } else {
                 oppositeTurnStreak.value = 0;
@@ -229,8 +228,19 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
 
     const strokePoint = options.toStrokePoint(point, event.pressure);
     points.value.push(strokePoint);
-    options.redraw();
+    return true;
+  }
 
+  function moveRound(event: PointerEvent) {
+    if (!isDrawing.value || activePointerId.value !== event.pointerId) return;
+
+    const coalescedEvents = event.getCoalescedEvents?.() ?? [event];
+    for (const coalescedEvent of coalescedEvents) {
+      if (!processPointEvent(coalescedEvent)) return;
+    }
+    options.scheduleRedraw();
+
+    const logicalSize = options.getLogicalSize();
     const completionMetrics = getStrokeCompletionMetrics(points.value, logicalSize, options.guideRadiusFactor);
     if (!completionMetrics) return;
 

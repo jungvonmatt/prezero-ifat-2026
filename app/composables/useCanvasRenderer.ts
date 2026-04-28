@@ -54,6 +54,16 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     redraw();
   }
 
+  let redrawRafId: number | null = null;
+
+  function scheduleRedraw() {
+    if (redrawRafId !== null) return;
+    redrawRafId = requestAnimationFrame(() => {
+      redrawRafId = null;
+      redraw();
+    });
+  }
+
   function redraw() {
     if (!ctx || !logicalSize.value) return;
 
@@ -120,6 +130,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     setCanvasEl,
     configureCanvas,
     redraw,
+    scheduleRedraw,
     pointFromPointer,
   };
 }
