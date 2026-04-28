@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_TOO_SMALL, incrementLabelRotation, type Point, type RoundResult } from "./useCircleScoring";
+import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, ERROR_LABEL_TOO_SMALL, incrementLabelRotation, type Point, type RoundResult } from "./useCircleScoring";
 import { useCanvasRenderer } from "./useCanvasRenderer";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useStrokeRenderer, type StrokePoint } from "./useStrokeRenderer";
@@ -224,11 +224,18 @@ export function useCircleGame() {
   });
 
   const hasResult = computed(() => Boolean(result.value));
+  const isErrorResult = computed(() => {
+    const label = result.value?.label;
+    if (!label) return false;
+    const errorLabels = new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT(), ERROR_LABEL_TOO_SMALL()]);
+    return errorLabels.has(label);
+  });
   const timerProgress = computed(() => clamp(roundTimeLeftMs.value / ROUND_TIMEOUT_MS, 0, 1));
   const timerDashoffset = computed(() => String(TIMER_RING_CIRCUMFERENCE * (1 - timerProgress.value)));
   const timerText = computed(() => `${(roundTimeLeftMs.value / 1000).toFixed(1)}s`);
   const scoreDisplayText = computed(() => {
     if (result.value) {
+      if (isErrorResult.value) return "XX.X%";
       return `${result.value.score.toFixed(1)}%`;
     }
 
@@ -377,6 +384,7 @@ export function useCircleGame() {
     hasStarted,
     isDrawing,
     hasResult,
+    isErrorResult,
     scoreDisplayText,
     roundTimeLeftMs,
     timerText,

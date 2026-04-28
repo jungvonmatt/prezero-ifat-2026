@@ -16,7 +16,10 @@
 
       <div class="score-container">
         <Transition name="fade">
-          <p v-if="isDrawing || (!hasResult && hasStarted) || (hasResult)" class="score-display" :class="{ 'has-result': hasResult }">{{ scoreDisplayText }}</p>
+          <p v-if="isDrawing || (!hasResult && hasStarted) || (hasResult)" class="score-display" :class="{ 'has-result': hasResult && !showErrorLabel, 'has-error': showErrorLabel }">{{ scoreDisplayText }}</p>
+        </Transition>
+        <Transition name="fade">
+          <p v-if="hasResult && showErrorLabel && resultLabel" class="error-label">{{ resultLabel }}</p>
         </Transition>
         <Transition name="fade">
           <p v-if="hasResult && isNewHighscore" class="highscore-hint">{{ t("game.highscore") }}</p>
@@ -124,6 +127,25 @@ const emit = defineEmits<{
   &.has-result {
     color: variables.$color-bright-green;
   }
+
+  &.has-error {
+    color: variables.$color-off-white;
+    opacity: 0.5;
+  }
+}
+
+.error-label {
+  position: relative;
+
+  z-index: 3;
+
+  pointer-events: none;
+
+  color: variables.$color-off-white;
+  @include fonts.font-secondary-semibold;
+  font-size: 50px;
+  line-height: 1;
+  text-align: center;
 }
 
 .highscore-hint {

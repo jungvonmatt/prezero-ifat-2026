@@ -73,7 +73,7 @@ import { ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, E
 import { useLocale } from "../composables/useLocale";
 import { INACTIVITY_TIMEOUT_MS } from "../constants/game";
 
-const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLeftMs, hasResult, scoreDisplayText, timerText, timerDashoffset, startGame, startRound, moveRound, endRound, resetRound: resetGameRound, resetToStartScreen: resetGameToStartScreen } = useCircleGame();
+const { setCanvasWrapEl, setCanvasEl, isDrawing, result, hasStarted, roundTimeLeftMs, hasResult, isErrorResult, scoreDisplayText, timerText, timerDashoffset, startGame, startRound, moveRound, endRound, resetRound: resetGameRound, resetToStartScreen: resetGameToStartScreen } = useCircleGame();
 
 const { highscores, isSaving, isLocalMode, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({ result });
 const { t, setLocale } = useLocale();
@@ -86,10 +86,7 @@ const RESULT_ERROR_LABELS = computed(() => new Set([ERROR_LABEL_INVALID_FORM(), 
 const isNewHighscore = ref(false);
 const isTooltipDismissed = ref(false);
 
-const showErrorLabel = computed(() => {
-  const label = result.value?.label;
-  return Boolean(label && RESULT_ERROR_LABELS.value.has(label));
-});
+const showErrorLabel = computed(() => isErrorResult.value);
 
 const tooltipLabel = computed(() => {
   if (showErrorLabel.value) {

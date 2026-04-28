@@ -26,7 +26,6 @@
       <p v-else-if="currentRank && currentRank <= 3" class="ranking-info">{{ t("highscores.rankTop", { rank: currentRank }) }}</p>
       <p v-else-if="currentRank && currentRank > 3 && currentTopPercent !== null" class="ranking-info">{{ t("highscores.rankPercent", { rank: currentRank, percent: currentTopPercent }) }}</p>
       <p v-else class="ranking-info">{{ t("highscores.noRanking") }}</p>
-      <p v-if="resultLabel && resultIsError" class="ranking-error-hint">{{ resultLabel }}</p>
     </div>
   </article>
 </template>
