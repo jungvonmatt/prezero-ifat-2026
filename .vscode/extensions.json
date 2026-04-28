@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "joshbolduc.commitlint",
+    "stylelint.vscode-stylelint",
+    "usernamehw.errorlens",
+    "vue.volar"
+  ]
+}

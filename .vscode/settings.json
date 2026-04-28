@@ -1,0 +1,64 @@
+{
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#79B992",
+    "activityBar.foreground": "#003D49",
+    "activityBar.inactiveForeground": "#6a737dae"
+  },
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": true,
+    "windsurf": true,
+    "cursor-global": true,
+    "cursor-workspace": true
+  },
+  "chat.agent.enabled": true,
+  "vue.suggest.propNameCasing": "alwaysCamelCase",
+  "vue.suggest.componentNameCasing": "alwaysPascalCase",
+  "gitmoji.onlyUseCustomEmoji": true,
+  "gitmoji.addCustomEmoji": [
+    {
+      "emoji": "feat:",
+      "code": ":feat:",
+      "description": "Introduce new features"
+    },
+    {
+      "emoji": "fix:",
+      "code": ":fix:",
+      "description": "Fixes a bug"
+    },
+    {
+      "emoji": "content:",
+      "code": ":content:",
+      "description": "Add or update content"
+    },
+    {
+      "emoji": "chore:",
+      "code": ":chore:",
+      "description": "Update build system, external dependencies or cleanup code"
+    },
+    {
+      "emoji": "ci:",
+      "code": ":ci:",
+      "description": "Add or update CI configuration or scripts"
+    },
+    {
+      "emoji": "docs:",
+      "code": ":docs:",
+      "description": "Add or update the documentation"
+    },
+    {
+      "emoji": "refactor:",
+      "code": ":refactor:",
+      "description": "Refactor code"
+    },
+    {
+      "emoji": "test:",
+      "code": ":test:",
+      "description": "Add or update tests"
+    },
+    {
+      "emoji": "release:",
+      "code": ":release:",
+      "description": "Publish a release"
+    }
+  ]
+}

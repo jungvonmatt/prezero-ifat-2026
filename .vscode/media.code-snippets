@@ -1,0 +1,98 @@
+// Place your global snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+// used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+// Placeholders with the same ids are connected.
+// Example:
+// "Print to console": {
+// 	"scope": "javascript,typescript",
+// 	"prefix": "log",
+// 	"body": [
+// 		"console.log('$1');",
+// 		"$2"
+// 	],
+// 	"description": "Log output to console"
+// }
+{
+  "Media query min:576px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:576",
+    "body": [
+      "@media (min-width: 576px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:768px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:768",
+    "body": [
+      "@media (min-width: 768px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:992px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:992",
+    "body": [
+      "@media (min-width: 992px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:1024px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:1024",
+    "body": [
+      "@media (min-width: 1024px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:1280px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:1280",
+    "body": [
+      "@media (min-width: 1280px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:1440px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:1440",
+    "body": [
+      "@media (min-width: 1440px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:1600px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:1600",
+    "body": [
+      "@media (min-width: 1600px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+  "Media query min:1920px": {
+    "scope": "html,php,css,scss,sass",
+    "prefix": "m:1920",
+    "body": [
+      "@media (min-width: 1920px) {",
+      "${1}",
+      "}"
+    ],
+    "description": "Media query"
+  },
+}
