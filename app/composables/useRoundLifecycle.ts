@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue";
 import type { Point, RoundResult } from "./useCircleScoring";
-import { clamp, normalizeAngleDelta, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, incrementLabelRotation } from "./useCircleScoring";
+import { clamp, normalizeAngleDelta, getStrokeCompletionMetrics, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, incrementLabelRotation } from "./useCircleScoring";
 import type { StrokePoint } from "./useStrokeRenderer";
 
 interface UseRoundLifecycleOptions {
@@ -12,6 +12,10 @@ interface UseRoundLifecycleOptions {
   directionMinAngleDeltaRatio: number;
   directionMinCenterDistanceFactor: number;
   directionOppositeStreakToAbort: number;
+  guideRadiusFactor: number;
+  autoCompleteCoverageDegreesThreshold: number;
+  autoCompleteClosureErrorThreshold: number;
+  autoCompleteRawCoverageDegreesHardStopThreshold: number;
   getLogicalSize: () => number;
   pointFromPointer: (event: PointerEvent) => Point | null;
   toStrokePoint: (point: Point, pressure?: number) => StrokePoint;
@@ -159,6 +163,17 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     options.redraw();
   }
 
+  function completeRound(pointerId: number) {
+    if (!options.canvasEl.value) return;
+
+    clearRoundTimeout();
+    clearRoundTick();
+    resetRoundClock();
+    resetTransientState();
+    releasePointerCapture(pointerId);
+    result.value = options.evaluateRound(points.value);
+  }
+
   function moveRound(event: PointerEvent) {
     if (!isDrawing.value || activePointerId.value !== event.pointerId) return;
 
@@ -215,17 +230,22 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
     const strokePoint = options.toStrokePoint(point, event.pressure);
     points.value.push(strokePoint);
     options.redraw();
+
+    const completionMetrics = getStrokeCompletionMetrics(points.value, logicalSize, options.guideRadiusFactor);
+    if (!completionMetrics) return;
+
+    const hasEnoughCoverage = completionMetrics.coverageDegrees >= options.autoCompleteCoverageDegreesThreshold;
+    const isNearlyClosed = completionMetrics.closureError <= options.autoCompleteClosureErrorThreshold;
+    const reachedHardStop = completionMetrics.rawCoverageDegrees >= options.autoCompleteRawCoverageDegreesHardStopThreshold;
+
+    if ((hasEnoughCoverage && isNearlyClosed) || reachedHardStop) {
+      completeRound(event.pointerId);
+    }
   }
 
   function endRound(event: PointerEvent) {
     if (!isDrawing.value || activePointerId.value !== event.pointerId || !options.canvasEl.value) return;
-
-    clearRoundTimeout();
-    clearRoundTick();
-    resetRoundClock();
-    resetTransientState();
-    releasePointerCapture(event.pointerId);
-    result.value = options.evaluateRound(points.value);
+    completeRound(event.pointerId);
   }
 
   function resetRound() {

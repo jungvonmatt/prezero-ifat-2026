@@ -20,6 +20,9 @@ const DIRECTION_MIN_ANGLE_DELTA_FLOOR = 0.0012;
 const DIRECTION_MIN_ANGLE_DELTA_RATIO = 0.35;
 const DIRECTION_MIN_CENTER_DISTANCE_FACTOR = 0.12;
 const DIRECTION_OPPOSITE_STREAK_TO_ABORT = 1;
+const AUTO_COMPLETE_COVERAGE_DEGREES_THRESHOLD = 356;
+const AUTO_COMPLETE_CLOSURE_ERROR_THRESHOLD = 0.2;
+const AUTO_COMPLETE_RAW_COVERAGE_DEGREES_HARD_STOP_THRESHOLD = 540;
 const ENABLE_SCORE_DEBUG = import.meta.dev;
 
 interface IntroPreviewVariant {
@@ -184,6 +187,10 @@ export function useCircleGame() {
     directionMinAngleDeltaRatio: DIRECTION_MIN_ANGLE_DELTA_RATIO,
     directionMinCenterDistanceFactor: DIRECTION_MIN_CENTER_DISTANCE_FACTOR,
     directionOppositeStreakToAbort: DIRECTION_OPPOSITE_STREAK_TO_ABORT,
+    guideRadiusFactor: GUIDE_RADIUS_FACTOR,
+    autoCompleteCoverageDegreesThreshold: AUTO_COMPLETE_COVERAGE_DEGREES_THRESHOLD,
+    autoCompleteClosureErrorThreshold: AUTO_COMPLETE_CLOSURE_ERROR_THRESHOLD,
+    autoCompleteRawCoverageDegreesHardStopThreshold: AUTO_COMPLETE_RAW_COVERAGE_DEGREES_HARD_STOP_THRESHOLD,
     getLogicalSize: () => logicalSize.value,
     pointFromPointer,
     toStrokePoint,

@@ -25,6 +25,7 @@ export interface RoundResult {
 export interface StrokeCompletionMetrics {
   closureError: number;
   coverageDegrees: number;
+  rawCoverageDegrees: number;
 }
 
 export function clamp(value: number, min: number, max: number) {
@@ -128,12 +129,14 @@ export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logic
     signedCoverage += normalizeAngleDelta(currentAngle - prevAngle);
   }
 
-  const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
+  const rawCoverageDegrees = Math.abs((signedCoverage * 180) / Math.PI);
+  const coverageDegrees = Math.min(360, rawCoverageDegrees);
   console.log("Signed coverage (degrees):", coverageDegrees);
 
   return {
     closureError,
     coverageDegrees,
+    rawCoverageDegrees,
   };
 }
 
