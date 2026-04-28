@@ -43,16 +43,18 @@ export const ERROR_LABEL_DIRECTION = () => t("errors.direction");
 export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout");
 
 export function getLabel(score: number) {
-  if (score >= 95) return t("score.label95");
+  console.log("Calculating label for score:", score);
+  if (score >= 100) return t("score.label100");
   if (score >= 90) return t("score.label90");
-  if (score >= 85) return t("score.label85");
   if (score >= 80) return t("score.label80");
-  if (score >= 75) return t("score.label75");
   if (score >= 70) return t("score.label70");
-  if (score >= 65) return t("score.label65");
   if (score >= 60) return t("score.label60");
-  if (score >= 55) return t("score.label55");
   if (score >= 50) return t("score.label50");
+  if (score >= 40) return t("score.label40");
+  if (score >= 30) return t("score.label30");
+  if (score >= 20) return t("score.label20");
+  if (score >= 10) return t("score.label10");
+  if (score >= 0) return t("score.label0");
   return t("score.label0");
 }
 
@@ -83,6 +85,7 @@ function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
 
 export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logicalSize: number, guideRadiusFactor: number): StrokeCompletionMetrics | null {
   if (logicalSize <= 0) return null;
+  console.log("Calculating stroke completion metrics for", rawStrokePoints.length, "points, logicalSize:", logicalSize, "guideRadiusFactor:", guideRadiusFactor);
 
   const rawPoints = getScoringPoints(rawStrokePoints);
   if (rawPoints.length < 4) return null;
@@ -97,6 +100,7 @@ export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logic
 
   const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
   const closureError = closureGap / Math.max(targetRadius, 0.0001);
+  console.log("Closure gap:", closureGap, "closure error:", closureError);
 
   let signedCoverage = 0;
   for (let index = 1; index < rawPoints.length; index += 1) {
@@ -110,6 +114,7 @@ export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logic
   }
 
   const coverageDegrees = Math.min(360, Math.abs((signedCoverage * 180) / Math.PI));
+  console.log("Signed coverage (degrees):", coverageDegrees);
 
   return {
     closureError,
