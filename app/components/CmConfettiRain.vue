@@ -12,7 +12,7 @@ interface ConfettiPiece {
   style: Record<string, string>;
 }
 
-const colors = ['#a5c814', '#00d4ff', '#ffcf33', '#ff5f7a', '#7df56a', '#ffffff'];
+const colors = ['#bce514', '#d4dee8'];
 
 // Tuning cheatsheet:
 // - Burst radius: adjust base + step in `burstRadius` for overall spread.
