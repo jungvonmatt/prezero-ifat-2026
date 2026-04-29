@@ -26,25 +26,24 @@
         </li>
       </ol>
     </div>
-    <p v-else class="muted">{{ t('highscores.noScores') }}</p>
+    <p v-else class="muted">No highscores yet.</p>
 
     <!-- ranking info -->
     <div class="ranking">
-      <p v-if="resultIsError" class="ranking-info">{{ t('highscores.noRanking') }}</p>
+      <p v-if="resultIsError" class="ranking-info">No ranking.</p>
       <p v-else-if="currentRank && currentRank <= 3" class="ranking-info">
-        {{ t('highscores.rankTop', { rank: currentRank }) }}
+        You are in place {{ currentRank }} of all participants.
       </p>
       <p v-else-if="currentRank && currentRank > 3 && currentTopPercent !== null" class="ranking-info">
-        {{ t('highscores.rankPercent', { rank: currentRank, percent: currentTopPercent }) }}
+        You are in place {{ currentRank }} and thus among the best {{ currentTopPercent }}% of all participants!
       </p>
-      <p v-else class="ranking-info">{{ t('highscores.noRanking') }}</p>
+      <p v-else class="ranking-info">No ranking.</p>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
-import { t } from '~/composables/useMessages';
 
 interface HighscoreEntry {
   score: number;

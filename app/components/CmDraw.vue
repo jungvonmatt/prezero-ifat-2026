@@ -20,10 +20,8 @@
 
       <Transition name="fade">
         <div v-if="showIntro && !hasStarted" class="intro-copy">
-          <span v-html="(t('game.intro') as string).replace('\n', '<br />')"></span>
-          <button class="btn" @click="emit('startGame')">
-            {{ t('game.start') }}
-          </button>
+          <span v-html="'Draw the<br />perfect circle!'"></span>
+          <button class="btn" @click="emit('startGame')">Let's go!</button>
         </div>
       </Transition>
 
@@ -45,9 +43,7 @@
           </p>
         </Transition>
         <Transition name="fade">
-          <p v-if="hasResult && isNewHighscore" class="highscore-hint">
-            {{ t('game.highscore') }}
-          </p>
+          <p v-if="hasResult && isNewHighscore" class="highscore-hint">Highscore!</p>
         </Transition>
       </div>
 
@@ -59,7 +55,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
-import { t } from '~/composables/useMessages';
 import CmConfettiRain from '~/components/CmConfettiRain.vue';
 
 const props = defineProps<{

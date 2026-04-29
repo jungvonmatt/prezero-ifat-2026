@@ -34,9 +34,28 @@ article {
   }
 }
 
+.sidebar-enter-active {
+  transition: transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 780ms;
+}
+
+.sidebar-leave-active {
+  transition: transform 380ms ease;
+}
+
+.sidebar-enter-from,
+.sidebar-leave-to {
+  transform: translateX(100%);
+}
+
+.sidebar-enter-to,
+.sidebar-leave-from {
+  transform: translateX(0);
+}
+
 .tooltip-info {
   position: absolute;
-  left: 0;
+  left: 50%;
   bottom: 64px;
   z-index: 30;
   width: 640px;
@@ -51,6 +70,7 @@ article {
   color: variables.$color-petrol;
   font-size: 32px;
   line-height: 1.25;
+  transform: translateX(-50%);
 }
 
 .tooltip-header {
@@ -72,26 +92,6 @@ article {
     width: 24px;
     height: auto;
   }
-
-  svg:last-child {
-    width: 32px;
-  }
-}
-
-.tooltip-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  color: inherit;
-}
-
-.tooltip-close:focus-visible {
-  outline: 2px solid variables.$color-petrol;
-  outline-offset: 4px;
 }
 
 .tooltip-enter-active {
@@ -108,18 +108,13 @@ article {
 .tooltip-enter-from,
 .tooltip-leave-to {
   opacity: 0;
-}
-
-.tooltip-enter-from {
-  transform-origin: left bottom;
-  transform: scale(0.86);
+  transform: translateX(-50%) translateY(40px);
 }
 
 .tooltip-enter-to,
 .tooltip-leave-from {
   opacity: 1;
-  transform-origin: left bottom;
-  transform: scale(1);
+  transform: translateX(-50%) translateY(0);
 }
 
 .tooltip-body {
@@ -131,6 +126,70 @@ article {
 .tooltip-header,
 .tooltip-body {
   animation-delay: 900ms;
+}
+
+.recent-circles {
+  position: absolute;
+  left: 0;
+  bottom: 64px;
+  z-index: 30;
+  width: 640px;
+  display: inline-flex;
+  padding: 40px 32px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+  border-radius: 0 60px;
+  background: #fff;
+  @include fonts.font-secondary-regular;
+  color: variables.$color-petrol;
+}
+
+.recent-circles-title {
+  @include fonts.font-secondary-semibold;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.recent-circles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.recent-circles-item {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background: variables.$color-petrol;
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+}
+
+.recent-circles-enter-active {
+  transition:
+    opacity 520ms ease,
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 780ms, 780ms;
+}
+
+.recent-circles-leave-active {
+  transition: opacity 180ms ease;
+}
+
+.recent-circles-enter-from,
+.recent-circles-leave-to {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.recent-circles-enter-to,
+.recent-circles-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @keyframes tooltipHeaderIn {
