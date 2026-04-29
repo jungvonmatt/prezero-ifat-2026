@@ -12,6 +12,7 @@
       :is-new-highscore="isNewHighscore"
       :result-label="result?.label || ''"
       :score-display-text="scoreDisplayText"
+      :class="{ 'has-result': hasResult }"
       @startGame="startGame"
       @startRound="startRound"
       @moveRound="moveRound"
@@ -29,9 +30,9 @@
       </aside>
     </Transition>
 
-    <Transition name="tooltips">
+    <Transition name="tooltips" :duration="750">
       <div v-if="hasResult" class="tooltips-container">
-        <div class="tooltip has-off-white-bg">
+        <div class="tooltip is-history">
           <div class="tooltip-header">
             <svg fill="none" height="30" viewBox="0 0 30 30" width="30" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -49,7 +50,7 @@
             <div class="recent-circles-item">Circle 6</div>
           </div>
         </div>
-        <div v-if="result?.label" class="tooltip">
+        <div v-if="result?.label" class="tooltip is-info">
           <div class="tooltip-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60" fill="none">
               <path
