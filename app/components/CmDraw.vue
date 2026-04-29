@@ -10,7 +10,12 @@
         @pointercancel="emit('endRound', $event)"></canvas>
 
       <Transition name="fade">
-        <img v-if="showIntro && !hasStarted" class="intro-circle" src="/intro-circle.svg" alt="" aria-hidden="true" />
+        <img
+          v-if="showIntro && !isDrawing && !hasResult"
+          class="intro-circle"
+          src="/intro-circle.svg"
+          alt=""
+          aria-hidden="true" />
       </Transition>
 
       <Transition name="fade">
@@ -47,18 +52,6 @@
       </div>
 
       <CmConfettiRain :active="shouldShowConfetti" />
-
-      <Transition name="timer">
-        <div v-if="isDrawing && !hasResult" class="timer-overlay" :class="{ warning: roundTimeLeftMs <= 3000 }">
-          <svg class="timer-ring" viewBox="0 0 100 100" aria-hidden="true">
-            <circle class="timer-ring-track" cx="50" cy="50" r="42" />
-            <circle class="timer-ring-progress" cx="50" cy="50" r="42" :style="{ strokeDashoffset: timerDashoffset }" />
-          </svg>
-          <div class="timer-overlay-content">
-            <p class="timer-caption">{{ timerText }}</p>
-          </div>
-        </div>
-      </Transition>
     </div>
   </section>
 </template>
@@ -81,9 +74,6 @@ const props = defineProps<{
   isNewHighscore: boolean;
   resultLabel: string;
   scoreDisplayText: string;
-  roundTimeLeftMs: number;
-  timerText: string;
-  timerDashoffset: string;
 }>();
 
 const shouldShowConfetti = computed(() => {

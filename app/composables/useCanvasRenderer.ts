@@ -77,13 +77,10 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     const points = options.getPoints();
     const isDrawing = options.getIsDrawing();
     const roundStartAt = options.getRoundStartAt();
-    const idleGuideVisible = !isDrawing && points.length === 0;
     const drawingGuideVisible = isDrawing && roundStartAt !== null;
-    const guideOpacity = idleGuideVisible
-      ? 1
-      : drawingGuideVisible
-        ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
-        : 0;
+    const guideOpacity = drawingGuideVisible
+      ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
+      : 0;
 
     ctx.strokeStyle = getCssVar('--color-off-white', '#f0f0f0');
 

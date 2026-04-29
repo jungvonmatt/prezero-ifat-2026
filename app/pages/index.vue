@@ -42,9 +42,6 @@
       :is-new-highscore="isNewHighscore"
       :result-label="result?.label || ''"
       :score-display-text="scoreDisplayText"
-      :round-time-left-ms="roundTimeLeftMs"
-      :timer-text="timerText"
-      :timer-dashoffset="timerDashoffset"
       @startGame="startGame"
       @startRound="startRound"
       @moveRound="moveRound"
@@ -86,12 +83,9 @@ const {
   isDrawing,
   result,
   hasStarted,
-  roundTimeLeftMs,
   hasResult,
   isErrorResult,
   scoreDisplayText,
-  timerText,
-  timerDashoffset,
   startGame,
   startRound,
   moveRound,

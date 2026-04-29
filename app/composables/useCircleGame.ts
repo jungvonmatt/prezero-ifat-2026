@@ -18,7 +18,6 @@ import { useRoundLifecycle } from './useRoundLifecycle';
 import { useStrokeRenderer, type StrokePoint } from './useStrokeRenderer';
 
 const ROUND_TIMEOUT_MS = 8000;
-const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
 const GUIDE_RADIUS_FACTOR = 0.4;
 const GUIDE_FADE_OUT_MS = 900;
 const INTRO_PREVIEW_DRAW_MS = 2000;
@@ -209,7 +208,6 @@ export function useCircleGame() {
     result,
     hasStarted,
     roundStartAt,
-    roundTimeLeftMs,
     clearRoundTimeout,
     clearRoundTick,
     startGame,
@@ -254,9 +252,6 @@ export function useCircleGame() {
     ]);
     return errorLabels.has(label);
   });
-  const timerProgress = computed(() => clamp(roundTimeLeftMs.value / ROUND_TIMEOUT_MS, 0, 1));
-  const timerDashoffset = computed(() => String(TIMER_RING_CIRCUMFERENCE * (1 - timerProgress.value)));
-  const timerText = computed(() => `${(roundTimeLeftMs.value / 1000).toFixed(1)}s`);
   const scoreDisplayText = computed(() => {
     if (result.value) {
       if (isErrorResult.value) return 'XX.X%';
@@ -417,9 +412,6 @@ export function useCircleGame() {
     hasResult,
     isErrorResult,
     scoreDisplayText,
-    roundTimeLeftMs,
-    timerText,
-    timerDashoffset,
     startGame,
     startRound,
     moveRound,

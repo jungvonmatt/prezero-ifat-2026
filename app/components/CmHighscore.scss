@@ -40,21 +40,21 @@
     > span:last-of-type {
       animation-delay: calc(var(--bar-delay) + 330ms);
     }
-  }
 
-  .highscore-top-entry:nth-child(1) {
-    order: 2;
-    --bar-delay: 0ms;
-  }
+    &:nth-child(1) {
+      order: 2;
+      --bar-delay: 0ms;
+    }
 
-  .highscore-top-entry:nth-child(2) {
-    order: 1;
-    --bar-delay: 70ms;
-  }
+    &:nth-child(2) {
+      order: 1;
+      --bar-delay: 70ms;
+    }
 
-  .highscore-top-entry:nth-child(3) {
-    order: 3;
-    --bar-delay: 140ms;
+    &:nth-child(3) {
+      order: 3;
+      --bar-delay: 140ms;
+    }
   }
 }
 
@@ -64,31 +64,31 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: variables.$color-petrol-light;
-}
+  background-color: variables.$color-petrol;
 
-.highscore-list-wrap::before,
-.highscore-list-wrap::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 32px;
-  pointer-events: none;
-  z-index: 1;
-  will-change: opacity;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 32px;
+    pointer-events: none;
+    z-index: 1;
+    will-change: opacity;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 
-.highscore-list-wrap::before {
-  top: -3px;
-  background: linear-gradient(to bottom, #{variables.$color-petrol-light}, #{rgba(variables.$color-petrol-light, 0)});
-}
+  &::before {
+    top: -3px;
+    background: linear-gradient(to bottom, #{variables.$color-petrol}, #{rgba(variables.$color-petrol, 0)});
+  }
 
-.highscore-list-wrap::after {
-  bottom: -1px;
-  background: linear-gradient(to top, #{variables.$color-petrol-light}, #{rgba(variables.$color-petrol-light, 0)});
+  &::after {
+    bottom: -1px;
+    background: linear-gradient(to top, #{variables.$color-petrol}, #{rgba(variables.$color-petrol, 0)});
+  }
 }
 
 .highscore-list {
@@ -117,16 +117,12 @@
   font-size: 32px;
   border-radius: 8px;
   border: 1px solid rgba(variables.$color-off-white, 0.5);
-  background-color: variables.$color-petrol-light;
+  background-color: variables.$color-petrol;
   margin: 12px 0;
   opacity: 0;
   transform: translateY(12px);
   animation: listItemIn 260ms ease-out forwards;
   animation-delay: calc(420ms + var(--list-index) * 35ms);
-
-  &:hover {
-    border-color: variables.$color-off-white;
-  }
 
   & > span:last-of-type {
     color: variables.$color-bright-green;

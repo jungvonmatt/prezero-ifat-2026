@@ -38,7 +38,7 @@
   line-height: 1;
 
   &.has-result {
-    color: variables.$color-bright-green;
+    color: variables.$color-petrol;
   }
 
   &.has-error {
@@ -106,64 +106,6 @@
   max-height: 85%;
   z-index: 2;
   pointer-events: none;
-}
-
-.timer-overlay {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin-top: 160px;
-  width: 80px;
-  height: 80px;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-}
-
-.timer-overlay p {
-  font-variant-numeric: tabular-nums;
-}
-
-.timer-caption {
-  display: inline-block;
-  min-width: 5ch;
-  text-align: center;
-  white-space: nowrap;
-  font-size: 16px;
-  letter-spacing: 1.1;
-}
-
-.timer-overlay-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.timer-ring {
-  position: absolute;
-  inset: 0;
-  transform: rotate(-90deg);
-}
-
-.timer-ring-track,
-.timer-ring-progress {
-  fill: none;
-  stroke-width: 8;
-}
-
-.timer-ring-track {
-  stroke: variables.$color-off-white;
-}
-
-.timer-ring-progress {
-  stroke: variables.$color-bright-green;
-  stroke-linecap: round;
-  stroke-dasharray: 263.89378290154264;
-  transition: stroke 0.2s ease;
 }
 
 @media (max-width: 860px) {
