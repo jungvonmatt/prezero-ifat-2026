@@ -1,13 +1,10 @@
 <template>
   <div class="app-viewport-fit" :class="{ 'app-viewport-fit--scaled': enableViewportFit }">
+    <button class="brand-logo" aria-label="App zurücksetzen" @click="handleLogoClick">
+      <img src="/logo-with-whitespace.svg" alt="Logo Prezero" />
+    </button>
     <div ref="viewportContent" class="app-viewport-content" :style="viewportStyle">
       <div class="site-shell">
-        <header class="site-header">
-          <button class="brand-logo" aria-label="App zurücksetzen" @click="handleLogoClick">
-            <img src="/logo.svg" alt="Logo Prezero" />
-          </button>
-        </header>
-
         <main class="page-wrap">
           <slot></slot>
         </main>

@@ -28,23 +28,20 @@
   height: 100%;
 }
 
-.site-header {
-  z-index: 300;
-}
-
 .brand-logo {
   position: absolute;
-  left: 80px;
-  top: 80px;
+  top: 0;
+  right: 0;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   appearance: none;
+  z-index: 300;
 }
 
 .brand-logo img {
   display: block;
-  width: 160px;
+  width: 320px;
   height: auto;
 }
