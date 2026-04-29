@@ -6,7 +6,7 @@
         v-for="(entry, index) in highscores.slice(0, 3)"
         :key="entry.createdAt + index"
         class="highscore-top-entry"
-        :style="{ '--entry-height': getTopEntryHeight(entry.score) }">
+        :style="{ '--entry-height': getTopEntryHeight(index) }">
         <span>#{{ index + 1 }}</span>
         <span>{{ entry.score.toFixed(1) }}%</span>
       </div>
@@ -106,19 +106,14 @@ const currentTopPercent = computed<number | null>(() => {
   return Math.max(1, Math.round((oneBasedRank / props.highscores.length) * 100));
 });
 
-function getTopEntryHeight(score: number): string {
-  const TOP_ENTRY_HEIGHT_EXPONENT = 3.4;
-  const roundedScore = Number(score.toFixed(1));
-  const clampedScore = Math.min(Math.max(roundedScore, 0), 100);
+function getTopEntryHeight(index: number): string {
+  const podiumHeights = ['100%', '78%', '64%'];
 
-  if (clampedScore <= 50) {
-    return '50%';
+  if (index >= 0 && index < podiumHeights.length) {
+    return podiumHeights[index] as string;
   }
 
-  const normalizedTopRange = (clampedScore - 50) / 50;
-  const emphasizedTopRange = Math.pow(normalizedTopRange, TOP_ENTRY_HEIGHT_EXPONENT);
-  const heightPercent = 50 + emphasizedTopRange * 50;
-  return `${heightPercent}%`;
+  return '64%';
 }
 </script>
 
