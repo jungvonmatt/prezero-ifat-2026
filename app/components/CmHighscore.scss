@@ -154,19 +154,6 @@
   line-height: 1.1;
 }
 
-.local-badge {
-  @include fonts.font-secondary-semibold;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: variables.$color-off-white;
-  background: variables.$color-off-white;
-  padding: 2px 7px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
 .muted {
   margin: 0;
 }

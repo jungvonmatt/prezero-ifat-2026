@@ -63,10 +63,8 @@
 
     <aside v-if="Boolean(result)" class="sidebar">
       <h2>{{ t('highscores.title') }}</h2>
-      <span v-if="isLocalMode" class="local-badge">{{ t('highscores.localBadge') }}</span>
       <CmHighscore
         :highscores="highscores"
-        :is-local-mode="isLocalMode"
         :latest-saved-score="latestSavedScore"
         :result-label="result?.label"
         :result-is-error="showErrorLabel" />
@@ -114,7 +112,7 @@ const {
   resetToStartScreen: resetGameToStartScreen,
 } = useCircleGame();
 
-const { highscores, isSaving, isLocalMode, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({
+const { highscores, isSaving, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({
   result,
 });
 const { t, setLocale } = useLocale();

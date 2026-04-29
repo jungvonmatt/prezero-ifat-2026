@@ -28,7 +28,6 @@ export interface LocaleMessages {
   highscores: {
     title: string;
     noScores: string;
-    localBadge: string;
     rankTop: string;
     rankPercent: string;
     noRanking: string;

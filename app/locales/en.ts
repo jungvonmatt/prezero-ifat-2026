@@ -72,7 +72,6 @@ export default {
   highscores: {
     title: 'SCORES',
     noScores: 'No highscores yet.',
-    localBadge: 'Saved locally',
     rankTop: 'You are in place {rank} of all participants.',
     rankPercent: 'You are in place {rank} and thus among the best {percent}% of all participants!',
     noRanking: 'No ranking.',

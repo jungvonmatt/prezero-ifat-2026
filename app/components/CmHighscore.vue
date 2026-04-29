@@ -55,7 +55,6 @@ interface HighscoreEntry {
 
 const props = defineProps<{
   highscores: HighscoreEntry[];
-  isLocalMode: boolean;
   latestSavedScore: number | null;
   resultLabel?: string;
   resultIsError?: boolean;
