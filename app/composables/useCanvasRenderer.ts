@@ -75,24 +75,6 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     const centerY = logicalSize.value / 2;
     const targetRadius = logicalSize.value * options.guideRadiusFactor;
     const points = options.getPoints();
-    const isDrawing = options.getIsDrawing();
-    const roundStartAt = options.getRoundStartAt();
-    const drawingGuideVisible = isDrawing && roundStartAt !== null;
-    const guideOpacity = drawingGuideVisible
-      ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
-      : 0;
-
-    ctx.strokeStyle = getCssVar('--color-off-white', '#f0f0f0');
-
-    ctx.save();
-    ctx.globalAlpha = guideOpacity;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([40, 40]);
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, targetRadius, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
 
     if (points.length > 1) {
       const drawContext: DrawContext = {
