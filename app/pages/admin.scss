@@ -1,0 +1,144 @@
+@use '~/assets/styles/colors' as variables;
+
+.admin-panel {
+  width: fit-content;
+  height: 100%;
+  margin: 20dvh auto 0;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin: 48px 0 40px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.status-text {
+  margin: 16px 25px;
+}
+
+.highscore-list-wrap {
+  position: relative;
+  height: 50dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: variables.$color-petrol;
+}
+
+.highscore-list-wrap::before,
+.highscore-list-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 32px;
+  pointer-events: none;
+  z-index: 1;
+  will-change: opacity;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.highscore-list-wrap::before {
+  top: -3px;
+  background: linear-gradient(to bottom, #{variables.$color-petrol}, #{rgba(variables.$color-petrol, 0)});
+}
+
+.highscore-list-wrap::after {
+  bottom: -1px;
+  background: linear-gradient(to top, #{variables.$color-petrol}, #{rgba(variables.$color-petrol, 0)});
+}
+
+.highscore-list {
+  margin: 0;
+  list-style: none;
+  flex: 1;
+  height: 100%;
+  overflow-y: scroll;
+  min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.highscore-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.highscore-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 56px;
+  padding: 12px 16px;
+  color: variables.$color-off-white;
+  font-size: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(variables.$color-off-white, 0.5);
+  background-color: variables.$color-petrol;
+  margin: 12px 0;
+
+  &:hover {
+    border-color: variables.$color-off-white;
+  }
+}
+
+.highscore-list .rank {
+  color: variables.$color-off-white;
+  width: 60px;
+}
+
+.highscore-list em {
+  color: variables.$color-bright-green;
+  font-style: normal;
+}
+
+.btn.danger {
+  background: #8d1c1c;
+  color: variables.$color-off-white;
+}
+
+.delete-x {
+  justify-self: end;
+  border: 1px solid variables.$color-off-white;
+  background: transparent;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.delete-x:hover:not(:disabled) {
+  border-color: #fff;
+}
+
+.delete-x:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 780px) {
+  .admin-head {
+    flex-direction: column;
+  }
+
+  .highscore-list li {
+    font-size: 26px;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .delete-x {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

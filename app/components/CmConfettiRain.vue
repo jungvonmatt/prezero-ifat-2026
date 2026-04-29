@@ -64,48 +64,4 @@ const pieces = computed<ConfettiPiece[]>(() => {
 });
 </script>
 
-<style scoped lang="scss">
-.confetti-layer {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 4;
-}
-
-.confetti-piece {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--size);
-  height: calc(var(--size) * 0.62);
-  border-radius: var(--shape);
-  background: var(--color);
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(var(--rotate));
-  animation: confetti-burst var(--duration) cubic-bezier(0.22, 0.62, 0.24, 1) var(--delay) infinite;
-}
-
-@keyframes confetti-burst {
-  0% {
-    transform: translate(-50%, -50%) scale(0.55) rotate(var(--rotate));
-    opacity: 0;
-  }
-
-  // Midpoint: particle reaches its visible peak at its radial travel target.
-  60% {
-    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1); /* ease-in-out */
-
-    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1)
-      rotate(calc(var(--rotate) + var(--spin)));
-    opacity: 1;
-  }
-
-  // End: only subtle outward drift plus fade, no late "jump".
-  100% {
-    transform: translate(calc(-50% + var(--tx-fade)), calc(-50% + var(--ty-fade))) scale(1.5)
-      rotate(calc(var(--rotate) + var(--spin) + 120deg));
-    opacity: 0;
-  }
-}
-</style>
+<style src="./CmConfettiRain.scss" scoped lang="scss" />
