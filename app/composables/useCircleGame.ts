@@ -19,7 +19,7 @@ import { useStrokeRenderer, type StrokePoint } from './useStrokeRenderer';
 
 const ROUND_TIMEOUT_MS = 8000;
 const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
-const GUIDE_RADIUS_FACTOR = 0.45;
+const GUIDE_RADIUS_FACTOR = 0.4;
 const GUIDE_FADE_OUT_MS = 900;
 const INTRO_PREVIEW_DRAW_MS = 2000;
 const INTRO_PREVIEW_HOLD_MS = 3000;
