@@ -1,5 +1,5 @@
 import { useRuntimeConfig } from '#imports';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 export interface HighscoreEntry {
@@ -7,7 +7,9 @@ export interface HighscoreEntry {
   createdAt: string;
 }
 
-const HIGHSCORE_LIMIT = 100;
+const HIGHSCORE_LIMIT = 1000;
+
+let writeQueue: Promise<void> = Promise.resolve();
 
 function getDataFilePath() {
   const config = useRuntimeConfig();
@@ -17,6 +19,50 @@ function getDataFilePath() {
 
 interface HighscoreFile {
   entries: HighscoreEntry[];
+}
+
+function normalizeEntries(entries: HighscoreEntry[]) {
+  return entries
+    .filter(entry => {
+      return typeof entry?.score === 'number' && typeof entry?.createdAt === 'string';
+    })
+    .map(entry => {
+      const safeScore = Math.min(100, Math.max(0, Number(entry.score)));
+      return {
+        score: Math.round(safeScore * 100) / 100,
+        createdAt: entry.createdAt,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, HIGHSCORE_LIMIT);
+}
+
+async function writeHighscoreFile(entries: HighscoreEntry[]) {
+  const dataFilePath = getDataFilePath();
+  await ensureDataFile();
+
+  const tempPath = `${dataFilePath}.tmp`;
+  const payload = JSON.stringify({ entries }, null, 2);
+
+  await writeFile(tempPath, payload, 'utf8');
+  await rename(tempPath, dataFilePath);
+}
+
+async function withWriteLock<T>(task: () => Promise<T>): Promise<T> {
+  const previous = writeQueue;
+  let release: () => void;
+
+  writeQueue = new Promise<void>(resolveQueue => {
+    release = resolveQueue;
+  });
+
+  await previous;
+
+  try {
+    return await task();
+  } finally {
+    release!();
+  }
 }
 
 async function ensureDataFile() {
@@ -41,19 +87,13 @@ export async function readHighscores() {
       return [];
     }
 
-    return parsed.entries
-      .filter(entry => {
-        return typeof entry?.score === 'number' && typeof entry?.createdAt === 'string';
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, HIGHSCORE_LIMIT);
+    return normalizeEntries(parsed.entries);
   } catch {
     return [];
   }
 }
 
 export async function addHighscore(input: { score?: number }) {
-  const dataFilePath = getDataFilePath();
   const safeScore = Number.isFinite(input.score) ? Math.min(100, Math.max(0, Number(input.score))) : 0;
 
   const nextEntry: HighscoreEntry = {
@@ -61,31 +101,20 @@ export async function addHighscore(input: { score?: number }) {
     createdAt: new Date().toISOString(),
   };
 
-  const current = await readHighscores();
-  const updated = [...current, nextEntry].sort((a, b) => b.score - a.score).slice(0, HIGHSCORE_LIMIT);
-
-  await writeFile(dataFilePath, JSON.stringify({ entries: updated }, null, 2), 'utf8');
-  return updated;
+  return withWriteLock(async () => {
+    const current = await readHighscores();
+    const updated = normalizeEntries([...current, nextEntry]);
+    await writeHighscoreFile(updated);
+    return updated;
+  });
 }
 
 export async function setHighscores(entries: HighscoreEntry[]) {
-  const dataFilePath = getDataFilePath();
-  const updated = entries
-    .filter(entry => {
-      return typeof entry?.score === 'number' && typeof entry?.createdAt === 'string';
-    })
-    .map(entry => {
-      const safeScore = Math.min(100, Math.max(0, Number(entry.score)));
-      return {
-        score: Math.round(safeScore * 100) / 100,
-        createdAt: entry.createdAt,
-      };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, HIGHSCORE_LIMIT);
-
-  await writeFile(dataFilePath, JSON.stringify({ entries: updated }, null, 2), 'utf8');
-  return updated;
+  return withWriteLock(async () => {
+    const updated = normalizeEntries(entries);
+    await writeHighscoreFile(updated);
+    return updated;
+  });
 }
 
 export async function clearHighscores() {
@@ -93,9 +122,10 @@ export async function clearHighscores() {
 }
 
 export async function deleteHighscore(createdAt: string) {
-  const dataFilePath = getDataFilePath();
-  const current = await readHighscores();
-  const updated = current.filter(entry => entry.createdAt !== createdAt);
-  await writeFile(dataFilePath, JSON.stringify({ entries: updated }, null, 2), 'utf8');
-  return updated;
+  return withWriteLock(async () => {
+    const current = await readHighscores();
+    const updated = normalizeEntries(current.filter(entry => entry.createdAt !== createdAt));
+    await writeHighscoreFile(updated);
+    return updated;
+  });
 }

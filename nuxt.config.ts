@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: { enabled: false },
   imports: { autoImport: false },
-  modules: ['@nuxt/content', '@nuxt/eslint'],
+  modules: ['@nuxt/eslint'],
   css: ['normalize.css', '~/assets/styles/global.scss'],
   runtimeConfig: {
     highscoreFilePath: 'content/highscores.json',
@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      include: ['../shared/types/vue-html.d.ts', '../shared/types/global.d.ts', '../content.config.ts'],
+      include: ['../shared/types/vue-html.d.ts', '../shared/types/global.d.ts'],
       compilerOptions: {
         types: ['./shared/types/global.d.ts'],
       },
