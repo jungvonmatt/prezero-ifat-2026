@@ -68,7 +68,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     if (!ctx || !logicalSize.value) return;
 
     ctx.clearRect(0, 0, logicalSize.value, logicalSize.value);
-    ctx.fillStyle = getCssVar('--core-color-bg', '#013c4a');
+    ctx.fillStyle = getCssVar('--color-teal');
     ctx.fillRect(0, 0, logicalSize.value, logicalSize.value);
 
     const centerX = logicalSize.value / 2;
