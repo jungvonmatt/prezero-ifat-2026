@@ -52,7 +52,6 @@ export function getLabelRotationIndex() {
 }
 
 export function getLabel(score: number) {
-  console.log('Calculating label for score:', score);
   const variants = getLabelVariants(score);
   const index = labelRotationIndex % 3;
   return variants[index];
@@ -160,14 +159,6 @@ export function getStrokeCompletionMetrics(
   guideRadiusFactor: number
 ): StrokeCompletionMetrics | null {
   if (logicalSize <= 0) return null;
-  console.log(
-    'Calculating stroke completion metrics for',
-    rawStrokePoints.length,
-    'points, logicalSize:',
-    logicalSize,
-    'guideRadiusFactor:',
-    guideRadiusFactor
-  );
 
   const rawPoints = getScoringPoints(rawStrokePoints);
   if (rawPoints.length < 4) return null;
@@ -182,7 +173,6 @@ export function getStrokeCompletionMetrics(
 
   const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
   const closureError = closureGap / Math.max(targetRadius, 0.0001);
-  console.log('Closure gap:', closureGap, 'closure error:', closureError);
 
   let signedCoverage = 0;
   for (let index = 1; index < rawPoints.length; index += 1) {
@@ -197,7 +187,6 @@ export function getStrokeCompletionMetrics(
 
   const rawCoverageDegrees = Math.abs((signedCoverage * 180) / Math.PI);
   const coverageDegrees = Math.min(360, rawCoverageDegrees);
-  console.log('Signed coverage (degrees):', coverageDegrees);
 
   return {
     closureError,

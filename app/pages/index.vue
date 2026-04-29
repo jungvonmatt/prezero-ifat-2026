@@ -47,12 +47,10 @@
             <p>History</p>
           </div>
           <div class="recent-circles-grid">
-            <div class="recent-circles-item">Circle 1</div>
-            <div class="recent-circles-item">Circle 2</div>
-            <div class="recent-circles-item">Circle 3</div>
-            <div class="recent-circles-item">Circle 4</div>
-            <div class="recent-circles-item">Circle 5</div>
-            <div class="recent-circles-item">Circle 6</div>
+            <div v-for="(entry, index) in history" :key="index" class="recent-circles-item">
+              <img :src="entry.imageDataUrl" :alt="`Circle ${index + 1}`" />
+              <p class="score-label">{{ entry.score === 0 ? 'X.XX' : entry.score.toFixed(1) }}%</p>
+            </div>
           </div>
         </div>
         <div v-if="result?.label" class="tooltip is-info">
@@ -76,6 +74,7 @@ import CmDraw from '../components/CmDraw.vue';
 import CmHighscore from '../components/CmHighscore.vue';
 import { useCircleGame } from '../composables/useCircleGame';
 import { useHighscores } from '../composables/useHighscores';
+import { useGameHistory } from '../composables/useGameHistory';
 import {
   ERROR_LABEL_INVALID_FORM,
   ERROR_LABEL_CLOSURE,
@@ -88,9 +87,11 @@ import { INACTIVITY_TIMEOUT_MS } from '../constants/game';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useState } from '#imports';
 
+const canvasEl = ref<HTMLCanvasElement | null>(null);
+
 const {
   setCanvasWrapEl,
-  setCanvasEl,
+  setCanvasEl: setCanvasElInner,
   isDrawing,
   result,
   hasStarted,
@@ -105,9 +106,20 @@ const {
   resetToStartScreen: resetGameToStartScreen,
 } = useCircleGame();
 
+const setCanvasEl = (el: any) => {
+  canvasEl.value = el instanceof HTMLCanvasElement ? el : null;
+  setCanvasElInner(el);
+};
+
 const { highscores, isSaving, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({
   result,
 });
+
+const { history, addToHistory } = useGameHistory({
+  result,
+  canvasEl,
+});
+
 const appResetSignal = useState<number>('appResetSignal', () => 0);
 
 let inactivityTimeoutId: number | null = null;
@@ -146,6 +158,9 @@ watch(result, nextResult => {
     isNewHighscore.value = false;
     return;
   }
+
+  // Always add to history, regardless of success or failure
+  addToHistory();
 
   const bestExistingScore = highscores.value.reduce((maxScore, entry) => {
     return Math.max(maxScore, entry.score);
