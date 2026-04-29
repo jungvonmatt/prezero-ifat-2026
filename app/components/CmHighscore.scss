@@ -131,6 +131,12 @@
   & > span:last-of-type {
     color: variables.$color-bright-green;
   }
+
+  &.is-user-score {
+    border-color: variables.$color-bright-green;
+    background-color: rgba(variables.$color-bright-green, 0.16);
+    box-shadow: 0 0 0 2px rgba(variables.$color-bright-green, 0.22);
+  }
 }
 
 .ranking {

@@ -14,8 +14,13 @@
 
     <!-- highscre-list -->
     <div v-if="highscores.length" class="highscore-list-wrap">
-      <ol class="highscore-list">
-        <li v-for="(entry, index) in highscores" :key="entry.createdAt + index" :style="{ '--list-index': index }">
+      <ol ref="highscoreListEl" class="highscore-list">
+        <li
+          v-for="(entry, index) in highscores"
+          :key="entry.createdAt + index"
+          :style="{ '--list-index': index }"
+          :data-score-index="String(index)"
+          :class="{ 'is-user-score': index === highlightedScoreIndex }">
           <span>#{{ index + 1 }}</span>
           <span>{{ entry.score.toFixed(1) }}%</span>
         </li>
@@ -38,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useLocale } from '~/composables/useLocale';
 
 const { t } = useLocale();
@@ -55,6 +60,37 @@ const props = defineProps<{
   resultLabel?: string;
   resultIsError?: boolean;
 }>();
+
+const highscoreListEl = ref<HTMLOListElement | null>(null);
+
+const highlightedScoreIndex = computed<number>(() => {
+  if (props.latestSavedScore === null || props.resultIsError) return -1;
+
+  const latestSavedScore = Number(props.latestSavedScore.toFixed(1));
+  return props.highscores.findIndex(entry => Number(entry.score.toFixed(1)) === latestSavedScore);
+});
+
+watch(
+  highlightedScoreIndex,
+  async index => {
+    if (index < 0) return;
+
+    await nextTick();
+
+    const listEl = highscoreListEl.value;
+    if (!listEl) return;
+
+    const targetRow = listEl.querySelector<HTMLLIElement>(`li[data-score-index="${index}"]`);
+    if (!targetRow) return;
+
+    targetRow.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    });
+  },
+  { immediate: true }
+);
 
 const currentRank = computed<number | null>(() => {
   if (props.latestSavedScore === null || !props.highscores.length) return null;
