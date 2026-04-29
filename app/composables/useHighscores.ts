@@ -10,20 +10,52 @@ interface UseHighscoresOptions {
   result: Ref<RoundResult | null>;
 }
 
+const HIGHSCORES_STORAGE_KEY = 'circle-game-highscores';
+const HIGHSCORE_LIMIT = 1000;
+
+function normalizeEntries(entries: HighscoreEntry[]): HighscoreEntry[] {
+  return entries
+    .filter(entry => {
+      return typeof entry?.score === 'number' && typeof entry?.createdAt === 'string';
+    })
+    .map(entry => {
+      const safeScore = Math.min(100, Math.max(0, Number(entry.score)));
+      return {
+        score: Math.round(safeScore * 100) / 100,
+        createdAt: entry.createdAt,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, HIGHSCORE_LIMIT);
+}
+
 export function useHighscores(options: UseHighscoresOptions) {
   const highscores = ref<HighscoreEntry[]>([]);
   const isSaving = ref(false);
   const latestSavedScore = ref<number | null>(null);
 
-  async function loadHighscores() {
+  function loadHighscores() {
     try {
-      highscores.value = await $fetch<HighscoreEntry[]>('/api/highscores');
+      const stored = localStorage.getItem(HIGHSCORES_STORAGE_KEY);
+      highscores.value = stored ? normalizeEntries(JSON.parse(stored)) : [];
     } catch {
       highscores.value = [];
     }
   }
 
-  async function saveScore() {
+  function saveHighscores(entries: HighscoreEntry[]) {
+    try {
+      const normalized = normalizeEntries(entries);
+      localStorage.setItem(HIGHSCORES_STORAGE_KEY, JSON.stringify(normalized));
+      highscores.value = normalized;
+      return normalized;
+    } catch {
+      highscores.value = [];
+      return [];
+    }
+  }
+
+  function saveScore() {
     if (!options.result.value || isSaving.value) return;
 
     const scoreToSave = options.result.value.score;
@@ -36,20 +68,19 @@ export function useHighscores(options: UseHighscoresOptions) {
     isSaving.value = true;
 
     try {
-      highscores.value = await $fetch<HighscoreEntry[]>('/api/highscores', {
-        method: 'POST',
-        body: {
-          score: scoreToSave,
-        },
-      });
+      const nextEntry: HighscoreEntry = {
+        score: Math.round(scoreToSave * 100) / 100,
+        createdAt: new Date().toISOString(),
+      };
+      saveHighscores([...highscores.value, nextEntry]);
       latestSavedScore.value = scoreToSave;
     } finally {
       isSaving.value = false;
     }
   }
 
-  onMounted(async () => {
-    await loadHighscores();
+  onMounted(() => {
+    loadHighscores();
   });
 
   return {
