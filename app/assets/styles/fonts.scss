@@ -1,59 +1,59 @@
 @font-face {
-  font-family: "Goldman";
+  font-family: 'Goldman';
   src:
-    url("~/assets/fonts/Goldman-Regular.woff2") format("woff2"),
-    url("~/assets/fonts/Goldman-Regular.ttf") format("truetype");
+    url('~/assets/fonts/Goldman-Regular.woff2') format('woff2'),
+    url('~/assets/fonts/Goldman-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Goldman";
+  font-family: 'Goldman';
   src:
-    url("~/assets/fonts/Goldman-Bold.woff2") format("woff2"),
-    url("~/assets/fonts/Goldman-Bold.ttf") format("truetype");
+    url('~/assets/fonts/Goldman-Bold.woff2') format('woff2'),
+    url('~/assets/fonts/Goldman-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Barlow Semi Condensed";
+  font-family: 'Barlow Semi Condensed';
   src:
-    url("~/assets/fonts/BarlowSemiCondensed-Regular.woff2") format("woff2"),
-    url("~/assets/fonts/BarlowSemiCondensed-Regular.ttf") format("truetype");
+    url('~/assets/fonts/BarlowSemiCondensed-Regular.woff2') format('woff2'),
+    url('~/assets/fonts/BarlowSemiCondensed-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Barlow Semi Condensed";
+  font-family: 'Barlow Semi Condensed';
   src:
-    url("~/assets/fonts/BarlowSemiCondensed-Bold.woff2") format("woff2"),
-    url("~/assets/fonts/BarlowSemiCondensed-Bold.ttf") format("truetype");
+    url('~/assets/fonts/BarlowSemiCondensed-Bold.woff2') format('woff2'),
+    url('~/assets/fonts/BarlowSemiCondensed-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Barlow Semi Condensed";
+  font-family: 'Barlow Semi Condensed';
   src:
-    url("~/assets/fonts/BarlowSemiCondensed-SemiBold.woff2") format("woff2"),
-    url("~/assets/fonts/BarlowSemiCondensed-SemiBold.ttf") format("truetype");
+    url('~/assets/fonts/BarlowSemiCondensed-SemiBold.woff2') format('woff2'),
+    url('~/assets/fonts/BarlowSemiCondensed-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
-$font-primary-regular: "Goldman", "Segoe UI", sans-serif;
-$font-primary-bold: "Goldman", "Segoe UI", sans-serif;
+$font-primary-regular: 'Goldman', 'Segoe UI', sans-serif;
+$font-primary-bold: 'Goldman', 'Segoe UI', sans-serif;
 
-$font-secondary-regular: "Barlow Semi Condensed", "Segoe UI", sans-serif;
-$font-secondary-semibold: "Barlow Semi Condensed", "Segoe UI", sans-serif;
-$font-secondary-bold: "Barlow Semi Condensed", "Segoe UI", sans-serif;
+$font-secondary-regular: 'Barlow Semi Condensed', 'Segoe UI', sans-serif;
+$font-secondary-semibold: 'Barlow Semi Condensed', 'Segoe UI', sans-serif;
+$font-secondary-bold: 'Barlow Semi Condensed', 'Segoe UI', sans-serif;
 
 @mixin font-primary-regular {
   font-family: $font-primary-regular;

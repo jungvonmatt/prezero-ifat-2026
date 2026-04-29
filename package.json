@@ -1,26 +1,76 @@
 {
-  "name": "PerfectCircleApp",
-  "type": "module",
+  "name": "prezero-ifat-2026",
   "private": true,
+  "author": {
+    "name": "Jung von Matt NECKAR",
+    "url": "https://www.jvm.com/offices/jvm-neckar/",
+    "email": "verwaltung@jvm-neckar.de"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=20.0.0",
+      "onFail": "error"
+    },
+    "os": {
+      "name": "darwin",
+      "onFail": "warn"
+    }
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "lint:eslint:fix": "eslint --fix .",
+    "lint:eslint": "eslint .",
+    "lint:fix": "npm run lint:eslint:fix && npm run lint:prettier:fix && npm run lint:stylelint:fix",
+    "lint:prettier:fix": "prettier --write ./",
+    "lint:prettier": "prettier --check .",
+    "lint:stylelint:fix": "stylelint --fix \"**/*.{vue,scss}\"",
+    "lint:stylelint": "stylelint \"**/*.{vue,scss}\"",
+    "lint": "npm run lint:eslint && npm run lint:prettier && npm run lint:stylelint",
     "postinstall": "nuxt prepare",
+    "prepare": "husky",
     "deploy:node:development": "./scripts/build-node.sh development && ./scripts/deploy-node.sh development",
     "deploy:node:staging": "./scripts/build-node.sh staging && ./scripts/deploy-node.sh staging",
     "deploy:node:production": "./scripts/build-node.sh production && ./scripts/deploy-node.sh production"
   },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
+    "@nuxt/eslint": "^1.15.2",
+    "@types/eslint-config-prettier": "^6.11.3",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-config-stylelint": "^26.1.0",
+    "eslint-plugin-vuejs-accessibility": "^2.4.1",
+    "globals": "^17.4.0",
+    "husky": "^9.1.7",
+    "json-sort-cli": "^4.1.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "sass": "1.77.5",
+    "stylelint": "^17.4.0",
+    "stylelint-config-recess-order": "^7.6.1",
+    "stylelint-config-recommended": "^18.0.0",
+    "stylelint-config-recommended-scss": "^17.0.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vue-tsc": "^3.2.5"
+  },
   "dependencies": {
     "@nuxt/content": "^3.12.0",
     "better-sqlite3": "^12.8.0",
+    "normalize.css": "^8.0.1",
     "nuxt": "^4.4.2",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },
-  "devDependencies": {
-    "@types/node": "^25.5.2",
-    "sass": "^1.99.0"
-  }
+  "packageManager": "npm@11.9.0",
+  "workspaces": ["apps/*", "packages/*"]
 }

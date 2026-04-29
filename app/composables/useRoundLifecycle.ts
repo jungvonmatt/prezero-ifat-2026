@@ -1,7 +1,14 @@
-import { ref, type Ref } from "vue";
-import type { Point, RoundResult } from "./useCircleScoring";
-import { clamp, normalizeAngleDelta, getStrokeCompletionMetrics, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, incrementLabelRotation } from "./useCircleScoring";
-import type { StrokePoint } from "./useStrokeRenderer";
+import { ref, type Ref } from 'vue';
+import type { Point, RoundResult } from './useCircleScoring';
+import {
+  clamp,
+  normalizeAngleDelta,
+  getStrokeCompletionMetrics,
+  ERROR_LABEL_DIRECTION,
+  ERROR_LABEL_TIMEOUT,
+  incrementLabelRotation,
+} from './useCircleScoring';
+import type { StrokePoint } from './useStrokeRenderer';
 
 interface UseRoundLifecycleOptions {
   canvasEl: Ref<HTMLCanvasElement | null>;
@@ -204,7 +211,11 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
             const averageDistanceToCenter = (prevDistanceToCenter + currentDistanceToCenter) / 2;
             const expectedAngleDelta = segmentLength / Math.max(averageDistanceToCenter, 0.0001);
             const adaptiveMinAngleDelta = expectedAngleDelta * options.directionMinAngleDeltaRatio;
-            const minAngleDelta = clamp(adaptiveMinAngleDelta, options.directionMinAngleDeltaFloor, options.directionMinAngleDelta);
+            const minAngleDelta = clamp(
+              adaptiveMinAngleDelta,
+              options.directionMinAngleDeltaFloor,
+              options.directionMinAngleDelta
+            );
 
             if (Math.abs(angleDelta) >= minAngleDelta) {
               const nextDirection: -1 | 1 = angleDelta > 0 ? 1 : -1;
@@ -256,7 +267,9 @@ export function useRoundLifecycle(options: UseRoundLifecycleOptions) {
       const guideCenterX = logicalSize / 2;
       const guideCenterY = logicalSize / 2;
       const minRadius = logicalSize * options.minCircleRadiusFactor;
-      const avgRadius = points.value.reduce((sum, p) => sum + Math.hypot(p.x - guideCenterX, p.y - guideCenterY), 0) / points.value.length;
+      const avgRadius =
+        points.value.reduce((sum, p) => sum + Math.hypot(p.x - guideCenterX, p.y - guideCenterY), 0) /
+        points.value.length;
       if (avgRadius < minRadius) {
         completeRound(event.pointerId);
         return;

@@ -1,9 +1,12 @@
 <template>
   <article class="highscore-article">
-    
     <!-- 3 best scores -->
     <div class="highscore-top-3">
-      <div v-for="(entry, index) in highscores.slice(0, 3)" :key="entry.createdAt + index" class="highscore-top-entry" :style="{ '--entry-height': getTopEntryHeight(entry.score) }">
+      <div
+        v-for="(entry, index) in highscores.slice(0, 3)"
+        :key="entry.createdAt + index"
+        class="highscore-top-entry"
+        :style="{ '--entry-height': getTopEntryHeight(entry.score) }">
         <span>#{{ index + 1 }}</span>
         <span>{{ entry.score.toFixed(1) }}%</span>
       </div>
@@ -18,21 +21,25 @@
         </li>
       </ol>
     </div>
-    <p v-else class="muted">{{ t("highscores.noScores") }}</p>
+    <p v-else class="muted">{{ t('highscores.noScores') }}</p>
 
     <!-- ranking info -->
     <div class="ranking">
-      <p v-if="resultIsError" class="ranking-info">{{ t("highscores.noRanking") }}</p>
-      <p v-else-if="currentRank && currentRank <= 3" class="ranking-info">{{ t("highscores.rankTop", { rank: currentRank }) }}</p>
-      <p v-else-if="currentRank && currentRank > 3 && currentTopPercent !== null" class="ranking-info">{{ t("highscores.rankPercent", { rank: currentRank, percent: currentTopPercent }) }}</p>
-      <p v-else class="ranking-info">{{ t("highscores.noRanking") }}</p>
+      <p v-if="resultIsError" class="ranking-info">{{ t('highscores.noRanking') }}</p>
+      <p v-else-if="currentRank && currentRank <= 3" class="ranking-info">
+        {{ t('highscores.rankTop', { rank: currentRank }) }}
+      </p>
+      <p v-else-if="currentRank && currentRank > 3 && currentTopPercent !== null" class="ranking-info">
+        {{ t('highscores.rankPercent', { rank: currentRank, percent: currentTopPercent }) }}
+      </p>
+      <p v-else class="ranking-info">{{ t('highscores.noRanking') }}</p>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useLocale } from "~/composables/useLocale";
+import { computed } from 'vue';
+import { useLocale } from '~/composables/useLocale';
 
 const { t } = useLocale();
 
@@ -53,7 +60,7 @@ const currentRank = computed<number | null>(() => {
   if (props.latestSavedScore === null || !props.highscores.length) return null;
 
   const latestScore = props.latestSavedScore;
-  const higherScores = props.highscores.filter((entry) => entry.score > latestScore).length;
+  const higherScores = props.highscores.filter(entry => entry.score > latestScore).length;
   if (higherScores === 0) {
     return 1; // Latest score is the highest
   }
@@ -73,7 +80,7 @@ function getTopEntryHeight(score: number): string {
   const clampedScore = Math.min(Math.max(roundedScore, 0), 100);
 
   if (clampedScore <= 50) {
-    return "50%";
+    return '50%';
   }
 
   const normalizedTopRange = (clampedScore - 50) / 50;
@@ -84,8 +91,8 @@ function getTopEntryHeight(score: number): string {
 </script>
 
 <style scoped lang="scss">
-@use "~/assets/styles/colors" as variables;
-@use "~/assets/styles/fonts" as fonts;
+@use '~/assets/styles/colors' as variables;
+@use '~/assets/styles/fonts' as fonts;
 
 .highscore-article {
   height: 80%;
@@ -166,7 +173,7 @@ function getTopEntryHeight(score: number): string {
 
 .highscore-list-wrap::before,
 .highscore-list-wrap::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   right: 0px;
@@ -235,12 +242,12 @@ function getTopEntryHeight(score: number): string {
   }
 }
 
-.ranking{
+.ranking {
   min-height: 100px;
   opacity: 0;
   animation: fadeIn 280ms ease-out forwards;
   animation-delay: 620ms;
-} 
+}
 
 .ranking-info,
 .ranking-error-hint {

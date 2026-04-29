@@ -1,6 +1,6 @@
-@use "~/assets/styles/fonts" as fonts;
-@use "~/assets/styles/colors" as variables;
-@use "~/assets/styles/transitions";
+@use '~/assets/styles/fonts' as fonts;
+@use '~/assets/styles/colors' as variables;
+@use '~/assets/styles/transitions';
 
 * {
   box-sizing: border-box;
@@ -8,7 +8,6 @@
   padding: 0;
 }
 
-html,
 html,
 body,
 #__nuxt {
@@ -22,11 +21,10 @@ body {
   font-size: 24px;
   line-height: 1;
   background: variables.$color-petrol;
-  
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1;
+  font-feature-settings: 'kern' 1;
 }
 
 button,
@@ -75,15 +73,10 @@ a {
 
 .page-wrap {
   position: relative;
-
-  width: 100%;
-  height: 100%;
   width: 1920px;
   height: 1080px;
-
   padding: 48px;
   margin: 0 auto;
-
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -109,25 +102,18 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-
   padding: 18px 56px 20px;
-
   white-space: nowrap;
-
   border: 0;
   border-radius: 6px;
-
   background: variables.$color-bright-green;
-  
+
   @include fonts.font-secondary-semibold;
   color: variables.$color-petrol;
   font-size: 27px;
   line-height: 1;
-
   cursor: pointer;
-
   text-decoration: none;
-
   transition:
     transform 150ms ease,
     opacity 150ms ease;

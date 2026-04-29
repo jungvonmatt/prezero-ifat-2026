@@ -1,11 +1,11 @@
 <template>
   <div v-if="active" class="confetti-layer" aria-hidden="true">
-    <span v-for="piece in pieces" :key="piece.id" class="confetti-piece" :style="piece.style" />
+    <span v-for="piece in pieces" :key="piece.id" class="confetti-piece" :style="piece.style"></span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue';
 
 defineProps<{
   active: boolean;
@@ -16,7 +16,7 @@ interface ConfettiPiece {
   style: Record<string, string>;
 }
 
-const colors = ["#a5c814", "#00d4ff", "#ffcf33", "#ff5f7a", "#7df56a", "#ffffff"];
+const colors = ['#a5c814', '#00d4ff', '#ffcf33', '#ff5f7a', '#7df56a', '#ffffff'];
 
 // Tuning cheatsheet:
 // - Burst radius: adjust base + step in `burstRadius` for overall spread.
@@ -41,23 +41,23 @@ const pieces = computed<ConfettiPiece[]>(() => {
     const size = 6 + (index % 6) * 2;
     const rotate = (index * 71) % 360;
     const spin = 420 + (index % 7) * 75;
-    const shape = index % 4 === 0 ? "999px" : "2px";
-    const color = colors[index % colors.length] || "#ffffff";
+    const shape = index % 4 === 0 ? '999px' : '2px';
+    const color = colors[index % colors.length] ?? '#ffffff';
 
     return {
       id: index,
       style: {
-        "--delay": `${delay}s`,
-        "--duration": `${duration}s`,
-        "--size": `${size}px`,
-        "--tx": `${travelX}px`,
-        "--ty": `${travelY}px`,
-        "--tx-fade": `${fadeX}px`,
-        "--ty-fade": `${fadeY}px`,
-        "--rotate": `${rotate}deg`,
-        "--spin": `${spin}deg`,
-        "--shape": shape,
-        "--color": color,
+        '--delay': `${delay}s`,
+        '--duration': `${duration}s`,
+        '--size': `${size}px`,
+        '--tx': `${travelX}px`,
+        '--ty': `${travelY}px`,
+        '--tx-fade': `${fadeX}px`,
+        '--ty-fade': `${fadeY}px`,
+        '--rotate': `${rotate}deg`,
+        '--spin': `${spin}deg`,
+        '--shape': shape,
+        '--color': color,
       },
     };
   });
@@ -96,13 +96,15 @@ const pieces = computed<ConfettiPiece[]>(() => {
   60% {
     animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1); /* ease-in-out */
 
-    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1) rotate(calc(var(--rotate) + var(--spin)));
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1)
+      rotate(calc(var(--rotate) + var(--spin)));
     opacity: 1;
   }
 
   // End: only subtle outward drift plus fade, no late "jump".
   100% {
-    transform: translate(calc(-50% + var(--tx-fade)), calc(-50% + var(--ty-fade))) scale(1.5) rotate(calc(var(--rotate) + var(--spin) + 120deg));
+    transform: translate(calc(-50% + var(--tx-fade)), calc(-50% + var(--ty-fade))) scale(1.5)
+      rotate(calc(var(--rotate) + var(--spin) + 120deg));
     opacity: 0;
   }
 }

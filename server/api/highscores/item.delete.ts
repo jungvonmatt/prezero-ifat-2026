@@ -1,18 +1,19 @@
-import { deleteHighscore } from '../../utils/highscores'
+import { deleteHighscore } from '../../utils/highscores';
+import { createError, defineEventHandler, readBody } from 'h3';
 
 interface DeletePayload {
-  createdAt?: string
+  createdAt?: string;
 }
 
-export default defineEventHandler(async (event) => {
-  const body = await readBody<DeletePayload>(event)
+export default defineEventHandler(async event => {
+  const body = await readBody<DeletePayload>(event);
 
   if (!body || typeof body.createdAt !== 'string' || !body.createdAt.trim()) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Missing createdAt for deletion'
-    })
+      statusMessage: 'Missing createdAt for deletion',
+    });
   }
 
-  return deleteHighscore(body.createdAt)
-})
+  return deleteHighscore(body.createdAt);
+});

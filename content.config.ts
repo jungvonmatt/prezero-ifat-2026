@@ -1,4 +1,4 @@
-import { defineCollection, defineContentConfig, z } from '@nuxt/content'
+import { defineCollection, defineContentConfig, z } from '@nuxt/content';
 
 export default defineContentConfig({
   collections: {
@@ -7,8 +7,8 @@ export default defineContentConfig({
       source: '**/*.md',
       schema: z.object({
         title: z.string(),
-        description: z.string().optional()
-      })
+        description: z.string().optional(),
+      }),
     }),
     highscores: defineCollection({
       type: 'data',
@@ -18,10 +18,10 @@ export default defineContentConfig({
           z.object({
             name: z.string(),
             score: z.number(),
-            createdAt: z.string()
+            createdAt: z.string(),
           })
-        )
-      })
-    })
-  }
-})
+        ),
+      }),
+    }),
+  },
+});

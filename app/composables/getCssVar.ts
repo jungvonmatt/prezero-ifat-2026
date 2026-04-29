@@ -1,4 +1,4 @@
-export function getCssVar(name: string, fallback = "") {
+export function getCssVar(name: string, fallback = '') {
   if (!import.meta.client) {
     return fallback;
   }

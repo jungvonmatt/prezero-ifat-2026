@@ -1,11 +1,21 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
-  modules: ['@nuxt/content'],
-  css: ['~/assets/styles/main.scss'],
+  devtools: { enabled: false },
+  telemetry: { enabled: false },
+  imports: { autoImport: false },
+  modules: ['@nuxt/content', '@nuxt/eslint'],
+  css: ['normalize.css', '~/assets/styles/global.scss'],
   runtimeConfig: {
-    highscoreFilePath: process.env.HIGHSCORE_FILE_PATH || 'content/highscores.json',
-    public: {}
-  }
-})
+    highscoreFilePath: 'content/highscores.json',
+  },
+
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      include: ['../shared/types/vue-html.d.ts', '../shared/types/global.d.ts', '../content.config.ts'],
+      compilerOptions: {
+        types: ['./shared/types/global.d.ts'],
+      },
+    },
+  },
+});

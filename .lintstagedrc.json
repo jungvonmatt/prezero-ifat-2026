@@ -1,0 +1,6 @@
+{
+  "*.scss": ["stylelint --fix", "prettier --write"],
+  "*.{ts,vue}": ["eslint --fix", "prettier --write"],
+  "*.{js,json,yml}": "prettier --write",
+  "i18n/locales/*.json": "jsonsort"
+}

@@ -1,0 +1,3 @@
+[scss, css, js, ts, vue, html, json, yaml, md]
+indent_style = space
+indent_size = 2

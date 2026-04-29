@@ -1,8 +1,21 @@
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { calculateLiveScore, clamp, getLabel, getStrokeCompletionMetrics, ERROR_LABEL_INVALID_FORM, ERROR_LABEL_CLOSURE, ERROR_LABEL_DIRECTION, ERROR_LABEL_TIMEOUT, ERROR_LABEL_TOO_SMALL, incrementLabelRotation, type Point, type RoundResult } from "./useCircleScoring";
-import { useCanvasRenderer } from "./useCanvasRenderer";
-import { useRoundLifecycle } from "./useRoundLifecycle";
-import { useStrokeRenderer, type StrokePoint } from "./useStrokeRenderer";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import {
+  calculateLiveScore,
+  clamp,
+  getLabel,
+  getStrokeCompletionMetrics,
+  ERROR_LABEL_INVALID_FORM,
+  ERROR_LABEL_CLOSURE,
+  ERROR_LABEL_DIRECTION,
+  ERROR_LABEL_TIMEOUT,
+  ERROR_LABEL_TOO_SMALL,
+  incrementLabelRotation,
+  type Point,
+  type RoundResult,
+} from './useCircleScoring';
+import { useCanvasRenderer } from './useCanvasRenderer';
+import { useRoundLifecycle } from './useRoundLifecycle';
+import { useStrokeRenderer, type StrokePoint } from './useStrokeRenderer';
 
 const ROUND_TIMEOUT_MS = 8000;
 const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -36,7 +49,7 @@ const INTRO_PREVIEW_DEFAULT_VARIANT: IntroPreviewVariant = {
   radiusScale: 0.92,
   startAngle: -Math.PI / 2 - 0.4,
   // Gently drifts out on the right, slightly in on the bottom — one smooth wave
-  radialProfile: [1, 1.06, 1.14, 1.20, 1.17, 1.09, 0.99, 0.87, 0.79, 0.77, 0.84, 0.93, 1],
+  radialProfile: [1, 1.06, 1.14, 1.2, 1.17, 1.09, 0.99, 0.87, 0.79, 0.77, 0.84, 0.93, 1],
 };
 
 const INTRO_PREVIEW_VARIANTS: IntroPreviewVariant[] = [
@@ -45,7 +58,7 @@ const INTRO_PREVIEW_VARIANTS: IntroPreviewVariant[] = [
     radiusScale: 0.935,
     startAngle: -Math.PI / 2 + 0.8,
     // Slight inward drift on the left, fuller on the top-right
-    radialProfile: [1, 1.07, 1.16, 1.20, 1.14, 1.03, 0.89, 0.77, 0.75, 0.82, 0.92, 1.00, 1],
+    radialProfile: [1, 1.07, 1.16, 1.2, 1.14, 1.03, 0.89, 0.77, 0.75, 0.82, 0.92, 1.0, 1],
   },
   {
     radiusScale: 0.91,
@@ -69,7 +82,7 @@ export function useCircleGame() {
       x: point.x,
       y: point.y,
       time: performance.now(),
-      pressure: pressure || 0.5,
+      pressure: pressure ?? 0.5,
     };
   }
 
@@ -97,7 +110,9 @@ export function useCircleGame() {
     const guideCenterX = logicalSize.value / 2;
     const guideCenterY = logicalSize.value / 2;
     const minRadius = logicalSize.value * MIN_CIRCLE_RADIUS_FACTOR;
-    const avgRadius = currentPoints.reduce((sum, p) => sum + Math.hypot(p.x - guideCenterX, p.y - guideCenterY), 0) / currentPoints.length;
+    const avgRadius =
+      currentPoints.reduce((sum, p) => sum + Math.hypot(p.x - guideCenterX, p.y - guideCenterY), 0) /
+      currentPoints.length;
     if (avgRadius < minRadius) {
       incrementLabelRotation();
       return {
@@ -133,10 +148,10 @@ export function useCircleGame() {
     }
 
     if (ENABLE_SCORE_DEBUG) {
-      console.debug("circle-score-live-final", {
+      console.debug('circle-score-live-final', {
         score,
         completionMetrics,
-        note: "final-score uses calculateLiveScore()",
+        note: 'final-score uses calculateLiveScore()',
       });
     }
 
@@ -230,7 +245,13 @@ export function useCircleGame() {
   const isErrorResult = computed(() => {
     const label = result.value?.label;
     if (!label) return false;
-    const errorLabels = new Set([ERROR_LABEL_INVALID_FORM(), ERROR_LABEL_CLOSURE(), ERROR_LABEL_DIRECTION(), ERROR_LABEL_TIMEOUT(), ERROR_LABEL_TOO_SMALL()]);
+    const errorLabels = new Set([
+      ERROR_LABEL_INVALID_FORM(),
+      ERROR_LABEL_CLOSURE(),
+      ERROR_LABEL_DIRECTION(),
+      ERROR_LABEL_TIMEOUT(),
+      ERROR_LABEL_TOO_SMALL(),
+    ]);
     return errorLabels.has(label);
   });
   const timerProgress = computed(() => clamp(roundTimeLeftMs.value / ROUND_TIMEOUT_MS, 0, 1));
@@ -238,16 +259,16 @@ export function useCircleGame() {
   const timerText = computed(() => `${(roundTimeLeftMs.value / 1000).toFixed(1)}s`);
   const scoreDisplayText = computed(() => {
     if (result.value) {
-      if (isErrorResult.value) return "XX.X%";
+      if (isErrorResult.value) return 'XX.X%';
       return `${result.value.score.toFixed(1)}%`;
     }
 
     if (!isDrawing.value) {
-      return hasStarted.value ? "0%" : "";
+      return hasStarted.value ? '0%' : '';
     }
 
     const liveScore = calculateLiveScore(points.value, logicalSize.value, GUIDE_RADIUS_FACTOR, SCORE_WEIGHT_CLOSURE);
-    if (liveScore === null) return "0%";
+    if (liveScore === null) return '0%';
     return `${liveScore.toFixed(1)}%`;
   });
 
@@ -275,7 +296,12 @@ export function useCircleGame() {
     return lerp(fromValue, toValue, blend);
   }
 
-  function buildIntroPreviewPoints(size: number, progress: number, now: number, variant: IntroPreviewVariant): StrokePoint[] {
+  function buildIntroPreviewPoints(
+    size: number,
+    progress: number,
+    now: number,
+    variant: IntroPreviewVariant
+  ): StrokePoint[] {
     const clampedProgress = clamp(progress, 0, 1);
     const templatePoints = buildIntroPreviewTemplatePoints(size, variant);
     const visiblePointCount = Math.max(2, Math.floor(templatePoints.length * clampedProgress));
@@ -336,7 +362,7 @@ export function useCircleGame() {
       const loopPhase = ((elapsed % INTRO_PREVIEW_TOTAL_MS) + INTRO_PREVIEW_TOTAL_MS) % INTRO_PREVIEW_TOTAL_MS;
       const variantIndex = Math.min(
         INTRO_PREVIEW_VARIANTS.length - 1,
-        Math.floor(loopPhase / INTRO_PREVIEW_VARIANT_MS),
+        Math.floor(loopPhase / INTRO_PREVIEW_VARIANT_MS)
       );
       const variantPhase = loopPhase - variantIndex * INTRO_PREVIEW_VARIANT_MS;
       const activeVariant = INTRO_PREVIEW_VARIANTS[variantIndex] ?? INTRO_PREVIEW_DEFAULT_VARIANT;
@@ -363,10 +389,10 @@ export function useCircleGame() {
   onMounted(() => {
     configureCanvas();
     startIntroPreviewLoop();
-    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
   });
 
-  watch(hasStarted, (started) => {
+  watch(hasStarted, started => {
     if (started) {
       stopIntroPreviewLoop();
       introPreviewPoints.value = [];
@@ -380,7 +406,7 @@ export function useCircleGame() {
     clearRoundTimeout();
     clearRoundTick();
     stopIntroPreviewLoop();
-    window.removeEventListener("resize", handleResize);
+    window.removeEventListener('resize', handleResize);
   });
 
   return {

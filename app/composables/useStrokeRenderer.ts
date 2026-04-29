@@ -1,3 +1,5 @@
+import { getCssVar } from './getCssVar';
+
 export interface StrokePoint {
   x: number;
   y: number;
@@ -19,7 +21,7 @@ const STROKE_WIDTH_ALPHA_SLOW = 0.16;
 const STROKE_WIDTH_ALPHA_FAST = 0.05;
 const STROKE_COLOR_ALPHA_SLOW = 0.14;
 const STROKE_COLOR_ALPHA_FAST = 0.04;
-const STROKE_START_COLOR = getCssVar("--core-color-green", "#a5c814");
+const STROKE_START_COLOR = getCssVar('--core-color-green', '#a5c814');
 const STROKE_START_HSB = { hue: 72, saturation: 90, brightness: 78 };
 const STROKE_END_HSB = { hue: 72, saturation: 90, brightness: 78 }; // We keep the same HSB values - no matter how fast a user is drawing
 
@@ -88,7 +90,7 @@ function getDynamicStrokeColorFromRatio(speedRatio: number) {
 }
 
 function getSegmentWidth(from: StrokePoint, to: StrokePoint) {
-  const pressure = to.pressure || 0.5;
+  const pressure = to.pressure ?? 0.5;
   return getDynamicStrokeWidth(from, to, pressure);
 }
 
@@ -97,17 +99,13 @@ function getSegmentColor(from: StrokePoint, to: StrokePoint) {
 }
 
 export function useStrokeRenderer() {
-  function drawStroke(
-    ctx: CanvasRenderingContext2D,
-    points: StrokePoint[],
-    _context?: DrawContext,
-  ) {
+  function drawStroke(ctx: CanvasRenderingContext2D, points: StrokePoint[], _context?: DrawContext) {
     if (points.length < 2) {
       return;
     }
 
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
 
     const strokeWidthScale = clamp(_context?.strokeWidthScale ?? 1, 0.25, 4);
 
@@ -125,7 +123,11 @@ export function useStrokeRenderer() {
 
       const targetSpeedRatio = getSpeedRatio(from, to);
       const currentWidth = getSegmentWidth(from, to);
-      const width = lerp(previousWidth, currentWidth, lerp(STROKE_WIDTH_ALPHA_SLOW, STROKE_WIDTH_ALPHA_FAST, targetSpeedRatio));
+      const width = lerp(
+        previousWidth,
+        currentWidth,
+        lerp(STROKE_WIDTH_ALPHA_SLOW, STROKE_WIDTH_ALPHA_FAST, targetSpeedRatio)
+      );
       previousWidth = width;
 
       const colorAlpha = lerp(STROKE_COLOR_ALPHA_SLOW, STROKE_COLOR_ALPHA_FAST, targetSpeedRatio);

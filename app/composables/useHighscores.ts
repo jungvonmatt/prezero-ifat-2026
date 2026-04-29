@@ -1,8 +1,7 @@
-import { onMounted, ref, type Ref } from "vue";
-import type { RoundResult } from "./useCircleScoring";
+import { onMounted, ref, type Ref } from 'vue';
+import type { RoundResult } from './useCircleScoring';
 
 export interface HighscoreEntry {
-
   score: number;
   createdAt: string;
 }
@@ -11,7 +10,7 @@ interface UseHighscoresOptions {
   result: Ref<RoundResult | null>;
 }
 
-const LOCAL_STORAGE_KEY = "ifat_highscores";
+const LOCAL_STORAGE_KEY = 'ifat_highscores';
 
 export function useHighscores(options: UseHighscoresOptions) {
   const highscores = ref<HighscoreEntry[]>([]);
@@ -44,7 +43,7 @@ export function useHighscores(options: UseHighscoresOptions) {
 
   async function loadHighscores() {
     try {
-      highscores.value = await $fetch<HighscoreEntry[]>("/api/highscores");
+      highscores.value = await $fetch<HighscoreEntry[]>('/api/highscores');
     } catch {
       isLocalMode.value = true;
       highscores.value = getLocalHighscores();
@@ -55,7 +54,7 @@ export function useHighscores(options: UseHighscoresOptions) {
     if (!options.result.value || isSaving.value) return;
 
     const scoreToSave = options.result.value.score;
-    const alreadyExists = highscores.value.some((e) => e.score === scoreToSave);
+    const alreadyExists = highscores.value.some(e => e.score === scoreToSave);
     if (alreadyExists) {
       latestSavedScore.value = scoreToSave;
       return;
@@ -68,8 +67,8 @@ export function useHighscores(options: UseHighscoresOptions) {
         highscores.value = saveLocalHighscore(scoreToSave);
       } else {
         try {
-          highscores.value = await $fetch<HighscoreEntry[]>("/api/highscores", {
-            method: "POST",
+          highscores.value = await $fetch<HighscoreEntry[]>('/api/highscores', {
+            method: 'POST',
             body: {
               score: scoreToSave,
             },
@@ -97,6 +96,8 @@ export function useHighscores(options: UseHighscoresOptions) {
     latestSavedScore,
     loadHighscores,
     saveScore,
-    resetLatestSavedScore: () => { latestSavedScore.value = null; },
+    resetLatestSavedScore: () => {
+      latestSavedScore.value = null;
+    },
   };
 }

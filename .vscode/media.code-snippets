@@ -18,81 +18,49 @@
   "Media query min:576px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:576",
-    "body": [
-      "@media (min-width: 576px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 576px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:768px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:768",
-    "body": [
-      "@media (min-width: 768px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 768px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:992px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:992",
-    "body": [
-      "@media (min-width: 992px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 992px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:1024px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:1024",
-    "body": [
-      "@media (min-width: 1024px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 1024px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:1280px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:1280",
-    "body": [
-      "@media (min-width: 1280px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 1280px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:1440px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:1440",
-    "body": [
-      "@media (min-width: 1440px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 1440px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:1600px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:1600",
-    "body": [
-      "@media (min-width: 1600px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 1600px) {", "${1}", "}"],
+    "description": "Media query",
   },
   "Media query min:1920px": {
     "scope": "html,php,css,scss,sass",
     "prefix": "m:1920",
-    "body": [
-      "@media (min-width: 1920px) {",
-      "${1}",
-      "}"
-    ],
-    "description": "Media query"
+    "body": ["@media (min-width: 1920px) {", "${1}", "}"],
+    "description": "Media query",
   },
 }

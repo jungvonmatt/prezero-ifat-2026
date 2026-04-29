@@ -17,8 +17,18 @@ logs
 .DS_Store
 .fleet
 .idea
+.stylelintcache
 
 # Local env files
 .env
 .env.*
 !.env.example
+
+# git-secret
+.gitsecret/keys/random_seed
+!*.secret
+
+# SSL Certificates
+*.pem
+*.key
+*.crt

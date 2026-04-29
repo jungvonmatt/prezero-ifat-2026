@@ -1,7 +1,13 @@
 <template>
   <section class="playground">
     <div :ref="setCanvasWrapEl" class="canvas-wrap">
-      <canvas :ref="setCanvasEl" class="circle-canvas" @pointerdown="emit('start-round', $event)" @pointermove="emit('move-round', $event)" @pointerup="emit('end-round', $event)" @pointercancel="emit('end-round', $event)" />
+      <canvas
+        :ref="setCanvasEl"
+        class="circle-canvas"
+        @pointerdown="emit('startRound', $event)"
+        @pointermove="emit('moveRound', $event)"
+        @pointerup="emit('endRound', $event)"
+        @pointercancel="emit('endRound', $event)"></canvas>
 
       <Transition name="fade">
         <img v-if="showIntro && !hasStarted" class="intro-circle" src="/intro-circle.svg" alt="" aria-hidden="true" />
@@ -10,19 +16,33 @@
       <Transition name="fade">
         <div v-if="showIntro && !hasStarted" class="intro-copy">
           <span v-html="(t('game.intro') as string).replace('\n', '<br />')"></span>
-          <button class="btn" @click="emit('start-game')">{{ t("game.start") }}</button>
+          <button class="btn" @click="emit('startGame')">
+            {{ t('game.start') }}
+          </button>
         </div>
       </Transition>
 
       <div class="score-container">
         <Transition name="fade">
-          <p v-if="isDrawing || (!hasResult && hasStarted) || (hasResult)" class="score-display" :class="{ 'has-result': hasResult && !showErrorLabel, 'has-error': showErrorLabel }">{{ scoreDisplayText }}</p>
+          <p
+            v-if="isDrawing || (!hasResult && hasStarted) || hasResult"
+            class="score-display"
+            :class="{
+              'has-result': hasResult && !showErrorLabel,
+              'has-error': showErrorLabel,
+            }">
+            {{ scoreDisplayText }}
+          </p>
         </Transition>
         <Transition name="fade">
-          <p v-if="hasResult && showErrorLabel && resultLabel" class="error-label">{{ resultLabel }}</p>
+          <p v-if="hasResult && showErrorLabel && resultLabel" class="error-label">
+            {{ resultLabel }}
+          </p>
         </Transition>
         <Transition name="fade">
-          <p v-if="hasResult && isNewHighscore" class="highscore-hint">{{ t("game.highscore") }}</p>
+          <p v-if="hasResult && isNewHighscore" class="highscore-hint">
+            {{ t('game.highscore') }}
+          </p>
         </Transition>
       </div>
 
@@ -44,9 +64,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import type { ComponentPublicInstance } from "vue";
-import { useLocale } from "~/composables/useLocale";
+import { computed } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
+import { useLocale } from '~/composables/useLocale';
+import CmConfettiRain from '~/components/CmConfettiRain.vue';
 
 const { t } = useLocale();
 
@@ -72,16 +93,16 @@ const shouldShowConfetti = computed(() => {
 });
 
 const emit = defineEmits<{
-  (event: "start-game"): void;
-  (event: "start-round", value: PointerEvent): void;
-  (event: "move-round", value: PointerEvent): void;
-  (event: "end-round", value: PointerEvent): void;
+  (event: 'startGame'): void;
+  (event: 'startRound', value: PointerEvent): void;
+  (event: 'moveRound', value: PointerEvent): void;
+  (event: 'endRound', value: PointerEvent): void;
 }>();
 </script>
 
 <style scoped lang="scss">
-@use "~/assets/styles/colors" as variables;
-@use "~/assets/styles/fonts" as fonts;
+@use '~/assets/styles/colors' as variables;
+@use '~/assets/styles/fonts' as fonts;
 
 .playground {
   display: flex;
@@ -150,7 +171,7 @@ const emit = defineEmits<{
 
 .highscore-hint {
   position: relative;
-  
+
   z-index: 5;
 
   pointer-events: none;

@@ -1,35 +1,36 @@
-import { setHighscores } from '../utils/highscores'
+import { setHighscores } from '../utils/highscores';
+import { createError, defineEventHandler, readBody } from 'h3';
 
 interface ImportedEntry {
-  score?: unknown
-  createdAt?: unknown
+  score?: unknown;
+  createdAt?: unknown;
 }
 
 interface HighscoreImportPayload {
-  entries?: ImportedEntry[]
+  entries?: ImportedEntry[];
 }
 
-export default defineEventHandler(async (event) => {
-  const body = await readBody<HighscoreImportPayload>(event)
+export default defineEventHandler(async event => {
+  const body = await readBody<HighscoreImportPayload>(event);
 
   if (!body || !Array.isArray(body.entries)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid highscores payload'
-    })
+      statusMessage: 'Invalid highscores payload',
+    });
   }
 
   const parsedEntries = body.entries
-    .filter((entry) => entry && typeof entry === 'object')
-    .map((entry) => {
-      const score = typeof entry.score === 'number' ? entry.score : 0
-      const createdAt = typeof entry.createdAt === 'string' ? entry.createdAt : new Date().toISOString()
+    .filter(entry => entry && typeof entry === 'object')
+    .map(entry => {
+      const score = typeof entry.score === 'number' ? entry.score : 0;
+      const createdAt = typeof entry.createdAt === 'string' ? entry.createdAt : new Date().toISOString();
 
       return {
         score,
-        createdAt
-      }
-    })
+        createdAt,
+      };
+    });
 
-  return setHighscores(parsedEntries)
-})
+  return setHighscores(parsedEntries);
+});

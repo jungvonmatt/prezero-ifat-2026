@@ -1,8 +1,8 @@
-import { ref, type ComponentPublicInstance } from "vue";
-import { clamp } from "./useCircleScoring";
-import { getCssVar } from "./getCssVar";
-import type { Point } from "./useCircleScoring";
-import type { DrawContext, StrokePoint } from "./useStrokeRenderer";
+import { ref, type ComponentPublicInstance } from 'vue';
+import { clamp } from './useCircleScoring';
+import { getCssVar } from './getCssVar';
+import type { Point } from './useCircleScoring';
+import type { DrawContext, StrokePoint } from './useStrokeRenderer';
 
 interface UseCanvasRendererOptions {
   getPoints: () => StrokePoint[];
@@ -47,7 +47,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     canvasEl.value.width = Math.floor(logicalSize.value * dpr);
     canvasEl.value.height = Math.floor(logicalSize.value * dpr);
 
-    ctx = canvasEl.value.getContext("2d");
+    ctx = canvasEl.value.getContext('2d');
     if (!ctx) return;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -68,7 +68,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
     if (!ctx || !logicalSize.value) return;
 
     ctx.clearRect(0, 0, logicalSize.value, logicalSize.value);
-    ctx.fillStyle = getCssVar("--core-color-bg", "#013c4a");
+    ctx.fillStyle = getCssVar('--core-color-bg', '#013c4a');
     ctx.fillRect(0, 0, logicalSize.value, logicalSize.value);
 
     const centerX = logicalSize.value / 2;
@@ -85,7 +85,7 @@ export function useCanvasRenderer(options: UseCanvasRendererOptions) {
         ? clamp(1 - (performance.now() - roundStartAt) / options.guideFadeOutMs, 0, 1)
         : 0;
 
-    ctx.strokeStyle = getCssVar("--color-off-white", "#f0f0f0");
+    ctx.strokeStyle = getCssVar('--color-off-white', '#f0f0f0');
 
     ctx.save();
     ctx.globalAlpha = guideOpacity;

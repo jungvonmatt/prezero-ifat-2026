@@ -1,5 +1,5 @@
-import type { StrokePoint } from "./useStrokeRenderer";
-import { useLocale } from "./useLocale";
+import type { StrokePoint } from './useStrokeRenderer';
+import { useLocale } from './useLocale';
 
 const { t } = useLocale();
 
@@ -38,11 +38,11 @@ export function normalizeAngleDelta(delta: number) {
   return delta;
 }
 
-export const ERROR_LABEL_INVALID_FORM = () => t("errors.invalidForm") as string;
-export const ERROR_LABEL_CLOSURE = () => t("errors.closure") as string;
-export const ERROR_LABEL_DIRECTION = () => t("errors.direction") as string;
-export const ERROR_LABEL_TIMEOUT = () => t("errors.timeout") as string;
-export const ERROR_LABEL_TOO_SMALL = () => t("errors.tooSmall") as string;
+export const ERROR_LABEL_INVALID_FORM = () => t('errors.invalidForm') as string;
+export const ERROR_LABEL_CLOSURE = () => t('errors.closure') as string;
+export const ERROR_LABEL_DIRECTION = () => t('errors.direction') as string;
+export const ERROR_LABEL_TIMEOUT = () => t('errors.timeout') as string;
+export const ERROR_LABEL_TOO_SMALL = () => t('errors.tooSmall') as string;
 
 let labelRotationIndex = 0;
 
@@ -55,24 +55,24 @@ export function getLabelRotationIndex() {
 }
 
 export function getLabel(score: number) {
-  console.log("Calculating label for score:", score);
+  console.log('Calculating label for score:', score);
   const variants = getLabelVariants(score);
   const index = labelRotationIndex % 3;
   return variants[index];
 }
 
 function getLabelVariants(score: number): string[] {
-  if (score >= 100) return t("score.label100") as unknown as string[];
-  if (score >= 90) return t("score.label90") as unknown as string[];
-  if (score >= 80) return t("score.label80") as unknown as string[];
-  if (score >= 70) return t("score.label70") as unknown as string[];
-  if (score >= 60) return t("score.label60") as unknown as string[];
-  if (score >= 50) return t("score.label50") as unknown as string[];
-  if (score >= 40) return t("score.label40") as unknown as string[];
-  if (score >= 30) return t("score.label30") as unknown as string[];
-  if (score >= 20) return t("score.label20") as unknown as string[];
-  if (score >= 10) return t("score.label10") as unknown as string[];
-  return t("score.label0") as unknown as string[];
+  if (score >= 100) return t('score.label100') as unknown as string[];
+  if (score >= 90) return t('score.label90') as unknown as string[];
+  if (score >= 80) return t('score.label80') as unknown as string[];
+  if (score >= 70) return t('score.label70') as unknown as string[];
+  if (score >= 60) return t('score.label60') as unknown as string[];
+  if (score >= 50) return t('score.label50') as unknown as string[];
+  if (score >= 40) return t('score.label40') as unknown as string[];
+  if (score >= 30) return t('score.label30') as unknown as string[];
+  if (score >= 20) return t('score.label20') as unknown as string[];
+  if (score >= 10) return t('score.label10') as unknown as string[];
+  return t('score.label0') as unknown as string[];
 }
 
 function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
@@ -93,16 +93,30 @@ function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
   const lastPoint = rawPoints[rawPoints.length - 1];
   const previousFilteredPoint = filteredPoints[filteredPoints.length - 1];
 
-  if (lastPoint && (!previousFilteredPoint || previousFilteredPoint.x !== lastPoint.x || previousFilteredPoint.y !== lastPoint.y)) {
+  if (
+    lastPoint &&
+    (!previousFilteredPoint || previousFilteredPoint.x !== lastPoint.x || previousFilteredPoint.y !== lastPoint.y)
+  ) {
     filteredPoints.push({ x: lastPoint.x, y: lastPoint.y });
   }
 
   return filteredPoints;
 }
 
-export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logicalSize: number, guideRadiusFactor: number): StrokeCompletionMetrics | null {
+export function getStrokeCompletionMetrics(
+  rawStrokePoints: StrokePoint[],
+  logicalSize: number,
+  guideRadiusFactor: number
+): StrokeCompletionMetrics | null {
   if (logicalSize <= 0) return null;
-  console.log("Calculating stroke completion metrics for", rawStrokePoints.length, "points, logicalSize:", logicalSize, "guideRadiusFactor:", guideRadiusFactor);
+  console.log(
+    'Calculating stroke completion metrics for',
+    rawStrokePoints.length,
+    'points, logicalSize:',
+    logicalSize,
+    'guideRadiusFactor:',
+    guideRadiusFactor
+  );
 
   const rawPoints = getScoringPoints(rawStrokePoints);
   if (rawPoints.length < 4) return null;
@@ -117,7 +131,7 @@ export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logic
 
   const closureGap = Math.hypot(last.x - first.x, last.y - first.y);
   const closureError = closureGap / Math.max(targetRadius, 0.0001);
-  console.log("Closure gap:", closureGap, "closure error:", closureError);
+  console.log('Closure gap:', closureGap, 'closure error:', closureError);
 
   let signedCoverage = 0;
   for (let index = 1; index < rawPoints.length; index += 1) {
@@ -132,7 +146,7 @@ export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logic
 
   const rawCoverageDegrees = Math.abs((signedCoverage * 180) / Math.PI);
   const coverageDegrees = Math.min(360, rawCoverageDegrees);
-  console.log("Signed coverage (degrees):", coverageDegrees);
+  console.log('Signed coverage (degrees):', coverageDegrees);
 
   return {
     closureError,
@@ -141,7 +155,12 @@ export function getStrokeCompletionMetrics(rawStrokePoints: StrokePoint[], logic
   };
 }
 
-export function calculateLiveScore(rawStrokePoints: StrokePoint[], logicalSize: number, guideRadiusFactor: number, closureWeightBase = 0.1): number | null {
+export function calculateLiveScore(
+  rawStrokePoints: StrokePoint[],
+  logicalSize: number,
+  guideRadiusFactor: number,
+  closureWeightBase = 0.1
+): number | null {
   if (logicalSize <= 0) return null;
 
   const rawPoints = getScoringPoints(rawStrokePoints);
@@ -150,7 +169,7 @@ export function calculateLiveScore(rawStrokePoints: StrokePoint[], logicalSize: 
   const guideCenterX = logicalSize / 2;
   const guideCenterY = logicalSize / 2;
   const targetRadius = logicalSize * guideRadiusFactor;
-  const distances = rawPoints.map((point) => Math.hypot(point.x - guideCenterX, point.y - guideCenterY));
+  const distances = rawPoints.map(point => Math.hypot(point.x - guideCenterX, point.y - guideCenterY));
   const avgRadius = distances.reduce((sum, value) => sum + value, 0) / distances.length;
 
   if (!Number.isFinite(avgRadius) || avgRadius <= 0) return null;
