@@ -66,10 +66,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
-import { useLocale } from '~/composables/useLocale';
+import { t } from '~/composables/useMessages';
 import CmConfettiRain from '~/components/CmConfettiRain.vue';
-
-const { t } = useLocale();
 
 const props = defineProps<{
   setCanvasWrapEl: (value: Element | ComponentPublicInstance | null) => void;

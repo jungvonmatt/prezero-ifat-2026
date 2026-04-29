@@ -44,9 +44,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
-import { useLocale } from '~/composables/useLocale';
-
-const { t } = useLocale();
+import { t } from '~/composables/useMessages';
 
 interface HighscoreEntry {
   score: number;

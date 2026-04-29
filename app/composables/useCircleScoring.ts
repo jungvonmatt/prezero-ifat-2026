@@ -1,7 +1,5 @@
 import type { StrokePoint } from './useStrokeRenderer';
-import { useLocale } from './useLocale';
-
-const { t } = useLocale();
+import { t } from './useMessages';
 
 export interface Point {
   x: number;

@@ -1,4 +1,43 @@
-export default {
+export interface Messages {
+  game: {
+    intro: string;
+    start: string;
+    highscore: string;
+    restart: string;
+  };
+  errors: {
+    invalidForm: string;
+    closure: string;
+    direction: string;
+    timeout: string;
+    tooSmall: string;
+  };
+  score: {
+    label100: string[];
+    label90: string[];
+    label80: string[];
+    label70: string[];
+    label60: string[];
+    label50: string[];
+    label40: string[];
+    label30: string[];
+    label20: string[];
+    label10: string[];
+    label0: string[];
+  };
+  highscores: {
+    title: string;
+    noScores: string;
+    rankTop: string;
+    rankPercent: string;
+    noRanking: string;
+  };
+  tooltip: {
+    label: string;
+  };
+}
+
+const messages = {
   game: {
     intro: 'Draw the\nperfect circle!',
     start: "Let's go!",
@@ -79,4 +118,24 @@ export default {
   tooltip: {
     label: 'DID YOU KNOW?',
   },
-} satisfies import('~/locales/types').LocaleMessages;
+} satisfies Messages;
+
+export function t(path: string, params?: Record<string, string | number>): string | string[] {
+  const keys = path.split('.');
+  let value: unknown = messages;
+
+  for (const key of keys) {
+    value = (value as Record<string, unknown> | undefined)?.[key];
+  }
+
+  if (typeof value === 'string') {
+    if (!params) return value;
+    return value.replace(/{(\w+)}/g, (_: string, key: string) => String(params[key] ?? `{${key}}`));
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  return path;
+}

@@ -1,16 +1,5 @@
 <template>
   <div class="game-grid">
-    <Transition name="fade">
-      <div v-if="!hasStarted" class="language-gate-actions">
-        <button class="btn language-btn" type="button" aria-label="Sprache Deutsch" @click.stop="selectLanguage('de')">
-          <img class="language-flag" src="/flagge-de.svg" alt="" aria-hidden="true" />
-        </button>
-        <button class="btn language-btn" type="button" aria-label="Language English" @click.stop="selectLanguage('en')">
-          <img class="language-flag" src="/flagge-en.svg" alt="" aria-hidden="true" />
-        </button>
-      </div>
-    </Transition>
-
     <!-- Tooltip-Info - show if result -->
     <div>
       <Transition name="tooltip">
@@ -78,7 +67,6 @@ import CmDraw from '../components/CmDraw.vue';
 import CmHighscore from '../components/CmHighscore.vue';
 import { useCircleGame } from '../composables/useCircleGame';
 import { useHighscores } from '../composables/useHighscores';
-import type { Locale } from '../composables/useLocale';
 import {
   ERROR_LABEL_INVALID_FORM,
   ERROR_LABEL_CLOSURE,
@@ -87,7 +75,7 @@ import {
   ERROR_LABEL_TOO_SMALL,
   getLabelRotationIndex,
 } from '../composables/useCircleScoring';
-import { useLocale } from '../composables/useLocale';
+import { t } from '../composables/useMessages';
 import { INACTIVITY_TIMEOUT_MS } from '../constants/game';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useState } from '#imports';
@@ -115,7 +103,6 @@ const {
 const { highscores, isSaving, latestSavedScore, saveScore, resetLatestSavedScore } = useHighscores({
   result,
 });
-const { t, setLocale } = useLocale();
 const appResetSignal = useState<number>('appResetSignal', () => 0);
 
 let inactivityTimeoutId: number | null = null;
@@ -232,10 +219,6 @@ onBeforeUnmount(() => {
     window.removeEventListener(eventName, handleUserActivity);
   }
 });
-
-function selectLanguage(locale: Locale) {
-  setLocale(locale);
-}
 </script>
 
 <style src="./index.scss" scoped lang="scss" />

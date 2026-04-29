@@ -7,7 +7,7 @@
 | File                                   | Role                                                                           |
 | -------------------------------------- | ------------------------------------------------------------------------------ |
 | `app/layouts/default.vue`              | App shell, viewport scaling (dev only), logo reset button                      |
-| `app/pages/index.vue`                  | Orchestrates game flow, highscore sidebar, locale, inactivity timer            |
+| `app/pages/index.vue`                  | Orchestrates game flow, highscore sidebar, fixed English copy, inactivity timer |
 | `app/components/CmDraw.vue`            | Canvas, intro screen, start button, live score, timer, result label            |
 | `app/components/CmHighscore.vue`       | Top-3 visualization, highscore list, ranking hint                              |
 | `app/components/CmConfettiRain.vue`    | Confetti on successful round                                                   |
@@ -17,9 +17,8 @@
 | `app/composables/useCircleScoring.ts`  | Pure scoring and geometry logic, error labels, score label mapping             |
 | `app/composables/useStrokeRenderer.ts` | Visual stroke rendering behavior                                               |
 | `app/composables/useHighscores.ts`     | Load/save highscores via API with localStorage fallback                        |
-| `app/composables/useLocale.ts`         | Lightweight i18n (`t(path, params)`, `setLocale`)                              |
+| `app/composables/useMessages.ts`       | Fixed English copy lookup via `t(path, params)`                                |
 | `app/constants/game.ts`                | Central game constants (including `INACTIVITY_TIMEOUT_MS`)                     |
-| `app/locales/de.ts` / `en.ts`          | Translation strings                                                            |
 | `server/utils/highscores.ts`           | Server-side highscore persistence (sorted, capped at top 100)                  |
 | `server/api/highscores.*.ts`           | REST API handlers                                                              |
 
@@ -29,7 +28,7 @@
 index.vue
   -> useCircleGame()           (useCanvasRenderer, useRoundLifecycle, useCircleScoring, useStrokeRenderer)
   -> useHighscores(result)
-  -> useLocale()
+  -> t() from useMessages
   -> CmDraw, CmHighscore, CmConfettiRain, tooltip-info (inline)
 
 default.vue
@@ -42,7 +41,7 @@ index.vue
 
 ### Start Screen
 
-- `hasStarted == false`: shows language buttons (index.vue), intro SVG and demo loop (CmDraw.vue)
+- `hasStarted == false`: shows intro SVG and demo loop (CmDraw.vue)
 - Demo loop: 3 fixed sample circle paths, drawn via the same stroke renderer as user input
 - Guide circle: invisible on start screen, appears during active drawing, fades out while drawing
 
@@ -111,10 +110,10 @@ Final value: `Math.pow(1 - liveError, 2.0) * 100` (quadratic spread over 0–100
 | DELETE | `/api/highscores`      | Clear all scores    | —                       |
 | DELETE | `/api/highscores/item` | Delete single entry | `{ createdAt: string }` |
 
-## i18n
+## Messages
 
-- Locales: `app/locales/de.ts`, `app/locales/en.ts`
-- API: `t(path, params)`, `locale`, `setLocale(locale)` from `useLocale.ts`
+- Fixed English copy lives in `app/composables/useMessages.ts`
+- API: `t(path, params)` from `useMessages.ts`
 - Score labels (`score.label0`–`score.label100`): arrays of 3 variants, rotated via `labelRotationIndex % 3`
 
 ## Tooltip Info
@@ -132,4 +131,4 @@ Shown when: `hasResult && !showErrorLabel && result?.label && !isTooltipDismisse
 | Round flow, pointer, timer, intro loop | `useRoundLifecycle.ts`, `useCircleGame.ts`, `useCanvasRenderer.ts`  |
 | Scoring math                           | `useCircleScoring.ts`, `useCircleGame.ts`                           |
 | Highscore storage and ranking          | `useHighscores.ts`, `server/api/*.ts`, `server/utils/highscores.ts` |
-| Translations                           | `app/locales/*.ts`, `useLocale.ts`                                  |
+| UI copy and score labels               | `app/composables/useMessages.ts`                                    |
