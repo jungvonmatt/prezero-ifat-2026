@@ -34,7 +34,6 @@
   position: relative;
   z-index: 3;
   pointer-events: none;
-  color: variables.$color-off-white;
   font-size: 130px;
   line-height: 1;
 
@@ -43,7 +42,7 @@
   }
 
   &.has-error {
-    color: variables.$color-off-white;
+    color: variables.$color-petrol-light;
     opacity: 0.5;
   }
 }
@@ -52,7 +51,6 @@
   position: relative;
   z-index: 3;
   pointer-events: none;
-  color: variables.$color-off-white;
   @include fonts.font-secondary-semibold;
   font-size: 50px;
   line-height: 1;
@@ -91,7 +89,6 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  color: variables.$color-off-white;
   text-align: center;
   @include fonts.font-secondary-regular;
   font-size: 80px;
