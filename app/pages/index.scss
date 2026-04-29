@@ -36,7 +36,7 @@ article {
 
 .sidebar-enter-active {
   transition: transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: 780ms;
+  transition-delay: 200ms;
 }
 
 .sidebar-leave-active {
@@ -53,36 +53,40 @@ article {
   transform: translateX(0);
 }
 
-.tooltip-info {
+.tooltips-container {
   position: absolute;
-  left: 50%;
-  bottom: 64px;
+  left: 0;
+  bottom: 0;
   z-index: 30;
-  width: 640px;
-  display: inline-flex;
+  width: calc(100vw - 548px);
+  height: auto;
+  display: flex;
+  gap: 0;
+}
+
+.tooltip {
+  width: 50%;
   padding: 40px 32px;
-  flex-direction: column;
-  justify-content: center;
-  gap: 32px;
-  border-radius: 60px 0;
-  background: #fff;
+  background: variables.$color-light-gray;
   @include fonts.font-secondary-regular;
   color: variables.$color-petrol;
   font-size: 32px;
   line-height: 1.25;
-  transform: translateX(-50%);
+
+  &.has-off-white-bg {
+    background: variables.$color-off-white;
+  }
 }
 
 .tooltip-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 16px;
   width: 100%;
   font-size: 24px;
+  margin-bottom: 32px;
   @include fonts.font-secondary-semibold;
-  opacity: 0;
-  animation: tooltipHeaderIn 900ms cubic-bezier(0.36, 1, 0.36, 1) forwards;
 
   p {
     flex-grow: 1;
@@ -91,75 +95,22 @@ article {
   svg {
     width: 24px;
     height: auto;
+    flex-shrink: 0;
   }
 }
 
-.tooltip-enter-active {
-  transition:
-    opacity 520ms ease,
-    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: 780ms, 780ms;
-}
-
-.tooltip-leave-active {
-  transition: opacity 180ms ease;
-}
-
-.tooltip-enter-from,
-.tooltip-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(40px);
-}
-
-.tooltip-enter-to,
-.tooltip-leave-from {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
 .tooltip-body {
-  opacity: 0;
-  transform: translateY(8px);
-  animation: tooltipContentIn 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.tooltip-header,
-.tooltip-body {
-  animation-delay: 900ms;
-}
-
-.recent-circles {
-  position: absolute;
-  left: 0;
-  bottom: 64px;
-  z-index: 30;
-  width: 640px;
-  display: inline-flex;
-  padding: 40px 32px;
-  flex-direction: column;
-  justify-content: center;
-  gap: 32px;
-  border-radius: 0 60px;
-  background: #fff;
-  @include fonts.font-secondary-regular;
-  color: variables.$color-petrol;
-}
-
-.recent-circles-title {
-  @include fonts.font-secondary-semibold;
-  font-size: 24px;
-  line-height: 1.25;
+  font-size: 32px;
 }
 
 .recent-circles-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 16px;
 }
 
 .recent-circles-item {
   aspect-ratio: 1;
-  border-radius: 16px;
   background: variables.$color-petrol;
   opacity: 0.3;
   display: flex;
@@ -169,47 +120,23 @@ article {
   color: white;
 }
 
-.recent-circles-enter-active {
-  transition:
-    opacity 520ms ease,
-    transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: 780ms, 780ms;
+.tooltips-enter-active {
+  transition: transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 200ms;
 }
 
-.recent-circles-leave-active {
-  transition: opacity 180ms ease;
+.tooltips-leave-active {
+  transition: opacity 380ms ease;
 }
 
-.recent-circles-enter-from,
-.recent-circles-leave-to {
+.tooltips-enter-from,
+.tooltips-leave-to {
   opacity: 0;
   transform: translateY(40px);
 }
 
-.recent-circles-enter-to,
-.recent-circles-leave-from {
+.tooltips-enter-to,
+.tooltips-leave-from {
   opacity: 1;
   transform: translateY(0);
-}
-
-@keyframes tooltipHeaderIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes tooltipContentIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
