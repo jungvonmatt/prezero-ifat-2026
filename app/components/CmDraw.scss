@@ -9,6 +9,7 @@
   height: 100%;
   z-index: 3;
   transition: transform 500ms ease;
+  transform: scale(1);
 
   &.is-small {
     transform-origin: top left;

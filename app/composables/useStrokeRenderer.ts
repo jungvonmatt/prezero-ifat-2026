@@ -21,9 +21,9 @@ const STROKE_WIDTH_ALPHA_SLOW = 0.16;
 const STROKE_WIDTH_ALPHA_FAST = 0.05;
 const STROKE_COLOR_ALPHA_SLOW = 0.14;
 const STROKE_COLOR_ALPHA_FAST = 0.04;
-const STROKE_START_COLOR = getCssVar('--core-color-green', '#a5c814');
-const STROKE_START_HSB = { hue: 72, saturation: 90, brightness: 78 };
-const STROKE_END_HSB = { hue: 72, saturation: 90, brightness: 78 }; // We keep the same HSB values - no matter how fast a user is drawing
+const STROKE_START_COLOR = getCssVar('--color-petrol', '#003d49');
+const STROKE_START_HSB = { hue: 190, saturation: 100, brightness: 29 };
+const STROKE_END_HSB = { hue: 190, saturation: 100, brightness: 29 }; // Keep the same HSB values no matter how fast a user is drawing
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
