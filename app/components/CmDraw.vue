@@ -1,55 +1,53 @@
 <template>
-  <section class="playground">
-    <div :ref="setCanvasWrapEl" class="canvas-wrap">
-      <canvas
-        :ref="setCanvasEl"
-        class="circle-canvas"
-        @pointerdown="emit('startRound', $event)"
-        @pointermove="emit('moveRound', $event)"
-        @pointerup="emit('endRound', $event)"
-        @pointercancel="emit('endRound', $event)"></canvas>
+  <div :ref="setCanvasWrapEl" class="cm-draw" :class="{ 'is-small': hasResult }">
+    <canvas
+      :ref="setCanvasEl"
+      class="circle-canvas"
+      @pointerdown="emit('startRound', $event)"
+      @pointermove="emit('moveRound', $event)"
+      @pointerup="emit('endRound', $event)"
+      @pointercancel="emit('endRound', $event)"></canvas>
 
-      <Transition name="fade">
-        <img
-          v-if="showIntro && !isDrawing && !hasResult"
-          class="intro-circle"
-          src="/intro-circle.svg"
-          alt=""
-          aria-hidden="true" />
-      </Transition>
+    <Transition name="fade">
+      <img
+        v-if="showIntro && !isDrawing && !hasResult"
+        class="intro-circle"
+        src="/intro-circle.svg"
+        alt=""
+        aria-hidden="true" />
+    </Transition>
 
-      <Transition name="fade">
-        <div v-if="showIntro && !hasStarted" class="intro-copy">
-          <span v-html="'Draw the<br />perfect circle!'"></span>
-          <button class="btn" @click="emit('startGame')">Let's go!</button>
-        </div>
-      </Transition>
-
-      <div class="score-container">
-        <Transition name="fade">
-          <p
-            v-if="isDrawing || (!hasResult && hasStarted) || hasResult"
-            class="score-display"
-            :class="{
-              'has-result': hasResult && !showErrorLabel,
-              'has-error': showErrorLabel,
-            }">
-            {{ scoreDisplayText }}
-          </p>
-        </Transition>
-        <Transition name="fade">
-          <p v-if="hasResult && showErrorLabel && resultLabel" class="error-label">
-            {{ resultLabel }}
-          </p>
-        </Transition>
-        <Transition name="fade">
-          <p v-if="hasResult && isNewHighscore" class="highscore-hint">Highscore!</p>
-        </Transition>
+    <Transition name="fade">
+      <div v-if="showIntro && !hasStarted" class="intro-copy">
+        <span v-html="'Draw the<br />perfect circle!'"></span>
+        <button class="btn" @click="emit('startGame')">Let's go!</button>
       </div>
+    </Transition>
 
-      <CmConfettiRain :active="shouldShowConfetti" />
+    <div class="score-container">
+      <Transition name="fade">
+        <p
+          v-if="isDrawing || (!hasResult && hasStarted) || hasResult"
+          class="score-display"
+          :class="{
+            'has-result': hasResult && !showErrorLabel,
+            'has-error': showErrorLabel,
+          }">
+          {{ scoreDisplayText }}
+        </p>
+      </Transition>
+      <Transition name="fade">
+        <p v-if="hasResult && showErrorLabel && resultLabel" class="error-label">
+          {{ resultLabel }}
+        </p>
+      </Transition>
+      <Transition name="fade">
+        <p v-if="hasResult && isNewHighscore" class="highscore-hint">Highscore!</p>
+      </Transition>
     </div>
-  </section>
+
+    <CmConfettiRain v-if="shouldShowConfetti" />
+  </div>
 </template>
 
 <script setup lang="ts">

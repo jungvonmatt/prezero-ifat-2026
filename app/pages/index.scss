@@ -7,8 +7,11 @@ article {
 
 .game-grid {
   position: relative;
-  width: 100dvw;
-  height: 100dvh;
+  min-width: none;
+  max-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .game-content-hidden {
@@ -16,7 +19,7 @@ article {
 }
 
 .sidebar {
-  position: absolute;
+  position: fixed;
   right: 0;
   top: 0;
   width: 548px;
@@ -54,7 +57,7 @@ article {
 }
 
 .tooltips-container {
-  position: absolute;
+  position: fixed;
   left: 0;
   bottom: 0;
   z-index: 30;

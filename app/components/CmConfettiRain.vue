@@ -1,15 +1,11 @@
 <template>
-  <div v-if="active" class="confetti-layer" aria-hidden="true">
+  <div class="cm-confetti-rain" aria-hidden="true">
     <span v-for="piece in pieces" :key="piece.id" class="confetti-piece" :style="piece.style"></span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-
-defineProps<{
-  active: boolean;
-}>();
 
 interface ConfettiPiece {
   id: number;
