@@ -166,9 +166,10 @@ watch(result, nextResult => {
     return Math.max(maxScore, entry.score);
   }, Number.NEGATIVE_INFINITY);
 
-  isNewHighscore.value = nextResult.score > bestExistingScore;
+  const isSuccessResult = !RESULT_ERROR_LABELS.value.has(nextResult.label ?? '');
+  isNewHighscore.value = isSuccessResult && nextResult.score > bestExistingScore;
 
-  if (!RESULT_ERROR_LABELS.value.has(nextResult.label ?? '') && !isSaving.value) {
+  if (isSuccessResult && !isSaving.value) {
     // Save successful rounds automatically without user input.
     void saveScore();
   }
