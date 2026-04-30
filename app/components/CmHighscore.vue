@@ -93,10 +93,7 @@ const currentRank = computed<number | null>(() => {
 
   const latestScore = props.latestSavedScore;
   const higherScores = props.highscores.filter(entry => entry.score > latestScore).length;
-  if (higherScores === 0) {
-    return 1; // Latest score is the highest
-  }
-  return higherScores;
+  return higherScores + 1;
 });
 
 const currentTopPercent = computed<number | null>(() => {

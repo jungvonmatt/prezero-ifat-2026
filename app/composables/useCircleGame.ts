@@ -169,9 +169,11 @@ export function useCircleGame() {
 
     incrementLabelRotation();
 
+    const roundedScore = Math.round(score * 10) / 10;
+
     return {
-      score,
-      label: getLabel(score),
+      score: roundedScore,
+      label: getLabel(roundedScore),
       radialError,
       radiusFitError,
       circularityError,
