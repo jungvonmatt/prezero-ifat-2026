@@ -1,7 +1,8 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { createHandlerBoundToURL } from 'workbox-precaching';
+import { NetworkFirst } from 'workbox-strategies';
+import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -15,9 +16,16 @@ cleanupOutdatedCaches();
 // Precache and route all assets
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Always serve the app shell for navigation requests when offline.
-const navigationHandler = createHandlerBoundToURL('/index.html');
-registerRoute(new NavigationRoute(navigationHandler));
+// Cache navigation requests with NetworkFirst so offline visits serve cached HTML
+// from the last successful online visit. No static index.html needed (ISR mode).
+registerRoute(
+  new NavigationRoute(
+    new NetworkFirst({
+      cacheName: 'html-cache',
+      plugins: [new CacheableResponsePlugin({ statuses: [200] })],
+    })
+  )
+);
 
 // Listen for messages from the app
 self.addEventListener('message', event => {
