@@ -9,6 +9,14 @@ export default defineNuxtConfig({
     highscoreFilePath: 'content/highscores.json',
   },
 
+  routeRules:
+    process.env.NODE_ENV === 'development'
+      ? undefined
+      : {
+          '/**': { isr: 60, cache: { varies: ['host', 'x-forwarded-host'] } },
+          '/api/**': { ssr: true, isr: false, cache: false },
+        },
+
   typescript: {
     typeCheck: true,
     tsConfig: {
