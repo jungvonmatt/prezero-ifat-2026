@@ -20,7 +20,7 @@
     <Transition name="fade">
       <div v-if="showIntro && !hasStarted" class="intro-copy">
         <span v-html="'It’s all in your hands.<br/>Draw the circle.'"></span>
-        <button class="btn" @click="emit('startGame')">Let's go!</button>
+        <button class="btn" @click="emit('startGame')">Start the loop.</button>
       </div>
     </Transition>
 
