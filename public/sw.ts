@@ -1,5 +1,7 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
+import { NavigationRoute, registerRoute } from 'workbox-routing';
+import { createHandlerBoundToURL } from 'workbox-precaching';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -12,6 +14,10 @@ cleanupOutdatedCaches();
 
 // Precache and route all assets
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Always serve the app shell for navigation requests when offline.
+const navigationHandler = createHandlerBoundToURL('/');
+registerRoute(new NavigationRoute(navigationHandler));
 
 // Listen for messages from the app
 self.addEventListener('message', event => {

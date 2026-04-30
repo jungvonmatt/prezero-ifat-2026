@@ -37,6 +37,7 @@ export default defineNuxtConfig({
     },
     injectManifest: {
       globPatterns: ['**/*.{js,css,html,png,jpg,jpeg,svg,ico,woff2,webm,mp4,mov}'],
+      additionalManifestEntries: ['/', '/index.html'],
       maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35 MB
     },
     registerWebManifestInRouteRules: true,
