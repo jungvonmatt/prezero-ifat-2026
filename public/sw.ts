@@ -16,7 +16,7 @@ cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Always serve the app shell for navigation requests when offline.
-const navigationHandler = createHandlerBoundToURL('/');
+const navigationHandler = createHandlerBoundToURL('/index.html');
 registerRoute(new NavigationRoute(navigationHandler));
 
 // Listen for messages from the app
