@@ -65,19 +65,13 @@ export function getLabelRotationIndex() {
   return labelRotationIndex;
 }
 
-export function getLabel(score: number) {
-  const variants = getLabelVariants(score);
-  const index = labelRotationIndex % 3;
-  return variants[index];
-}
-
-function getLabelVariants(score: number): string[] {
+export function getLabel(score: number): string {
   if (score >= 100)
-    return ['A flawless loop! You’ve demonstrated the excellence required for true resource circularity.'];
-  if (score >= 90) return ['Excellent! Almost there! This level of accuracy is key to maximizing resource efficiency.'];
-  if (score >= 80) return ['Impressive! High-precision sorting is essential for sustainable resource management.'];
-  if (score >= 70) return ['Great job! A solid foundation for keeping valuable materials within the loop.'];
-  return ['Great start! Every successful loop depends on the right momentum.'];
+    return 'A flawless loop! You’ve demonstrated the excellence required for true resource circularity.';
+  if (score >= 90) return 'Excellent! Almost there! This level of accuracy is key to maximizing resource efficiency.';
+  if (score >= 80) return 'Impressive! High-precision sorting is essential for sustainable resource management.';
+  if (score >= 70) return 'Great job! A solid foundation for keeping valuable materials within the loop.';
+  return 'Great start! Every successful loop depends on the right momentum.';
 }
 
 function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
