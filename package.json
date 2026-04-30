@@ -64,6 +64,7 @@
     "vue-tsc": "^3.2.5"
   },
   "dependencies": {
+    "@vite-pwa/nuxt": "^1.1.1",
     "better-sqlite3": "^12.8.0",
     "normalize.css": "^8.0.1",
     "nuxt": "^4.4.2",
