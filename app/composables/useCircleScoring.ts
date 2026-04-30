@@ -10,6 +10,7 @@ export interface RoundResult {
   label: string | undefined;
   radialError: number;
   radiusFitError: number;
+  circularityError: number;
   closureError: number;
   directionChangeError: number;
   timeoutError: number;
@@ -23,6 +24,15 @@ export interface StrokeCompletionMetrics {
   closureError: number;
   coverageDegrees: number;
   rawCoverageDegrees: number;
+}
+
+export interface ScoreComponents {
+  score: number;
+  radialError: number;
+  radiusFitError: number;
+  circularityError: number;
+  closureError: number;
+  coverageDegrees: number;
 }
 
 export function clamp(value: number, min: number, max: number) {
@@ -40,6 +50,10 @@ export const ERROR_LABEL_CLOSURE = () => 'Close the circle!';
 export const ERROR_LABEL_DIRECTION = () => 'Avoid direction changes!';
 export const ERROR_LABEL_TIMEOUT = () => 'Draw faster!';
 export const ERROR_LABEL_TOO_SMALL = () => 'Draw a bigger circle!';
+
+const SCORE_WEIGHT_RADIUS_FIT = 0.42;
+const SCORE_WEIGHT_RADIAL = 0.22;
+const SCORE_WEIGHT_CIRCULARITY = 0.28;
 
 let labelRotationIndex = 0;
 
@@ -153,6 +167,29 @@ function getScoringPoints(rawPoints: StrokePoint[]): Point[] {
   return filteredPoints;
 }
 
+function calculateCircularityError(points: Point[]): number | null {
+  if (points.length < 4) return null;
+
+  let twiceArea = 0;
+  let perimeter = 0;
+
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+
+    if (!current || !next) continue;
+
+    twiceArea += current.x * next.y - next.x * current.y;
+    perimeter += Math.hypot(next.x - current.x, next.y - current.y);
+  }
+
+  if (!Number.isFinite(perimeter) || perimeter <= 0.0001) return null;
+
+  const area = Math.abs(twiceArea) / 2;
+  const circularity = clamp((4 * Math.PI * area) / (perimeter * perimeter), 0, 1);
+  return clamp(1 - circularity, 0, 1);
+}
+
 export function getStrokeCompletionMetrics(
   rawStrokePoints: StrokePoint[],
   logicalSize: number,
@@ -201,6 +238,16 @@ export function calculateLiveScore(
   guideRadiusFactor: number,
   closureWeightBase = 0.1
 ): number | null {
+  const scoreComponents = calculateScoreComponents(rawStrokePoints, logicalSize, guideRadiusFactor, closureWeightBase);
+  return scoreComponents?.score ?? null;
+}
+
+export function calculateScoreComponents(
+  rawStrokePoints: StrokePoint[],
+  logicalSize: number,
+  guideRadiusFactor: number,
+  closureWeightBase = 0.1
+): ScoreComponents | null {
   if (logicalSize <= 0) return null;
 
   const rawPoints = getScoringPoints(rawStrokePoints);
@@ -229,11 +276,28 @@ export function calculateLiveScore(
   if (!completionMetrics) return null;
 
   const { closureError, coverageDegrees } = completionMetrics;
+  const circularityError = calculateCircularityError(rawPoints);
+  if (circularityError === null) return null;
+
   const coverageProgress = clamp(coverageDegrees / 360, 0, 1);
   const closureWeight = closureWeightBase * coverageProgress * coverageProgress;
+  const circularityWeight = SCORE_WEIGHT_CIRCULARITY * coverageProgress;
+  const liveError = clamp(
+    radiusFitError * SCORE_WEIGHT_RADIUS_FIT +
+      radialError * SCORE_WEIGHT_RADIAL +
+      circularityError * circularityWeight +
+      closureError * closureWeight,
+    0,
+    1
+  );
+  const score = clamp(Math.pow(1 - liveError, 2.0) * 100, 0, 100);
 
-  const liveError = clamp(radiusFitError * 0.62 + radialError * 0.3 + closureError * closureWeight, 0, 1);
-  const liveScore = Math.pow(1 - liveError, 2.0) * 100;
-
-  return clamp(liveScore, 0, 100);
+  return {
+    score,
+    radialError,
+    radiusFitError,
+    circularityError,
+    closureError,
+    coverageDegrees,
+  };
 }

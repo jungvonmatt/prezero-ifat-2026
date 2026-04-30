@@ -1,9 +1,9 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import {
   calculateLiveScore,
+  calculateScoreComponents,
   clamp,
   getLabel,
-  getStrokeCompletionMetrics,
   ERROR_LABEL_INVALID_FORM,
   ERROR_LABEL_CLOSURE,
   ERROR_LABEL_DIRECTION,
@@ -86,16 +86,21 @@ export function useCircleGame() {
   }
 
   function createRoundResult(currentPoints: StrokePoint[]): RoundResult {
-    const completionMetrics = getStrokeCompletionMetrics(currentPoints, logicalSize.value, GUIDE_RADIUS_FACTOR);
-    const score = calculateLiveScore(currentPoints, logicalSize.value, GUIDE_RADIUS_FACTOR, SCORE_WEIGHT_CLOSURE);
+    const scoreComponents = calculateScoreComponents(
+      currentPoints,
+      logicalSize.value,
+      GUIDE_RADIUS_FACTOR,
+      SCORE_WEIGHT_CLOSURE
+    );
 
-    if (score === null || !completionMetrics) {
+    if (!scoreComponents) {
       incrementLabelRotation();
       return {
         score: 0,
         label: ERROR_LABEL_INVALID_FORM(),
         radialError: 1,
         radiusFitError: 1,
+        circularityError: 1,
         closureError: 1,
         directionChangeError: 0,
         timeoutError: 0,
@@ -105,6 +110,8 @@ export function useCircleGame() {
         coverageDegrees: 0,
       };
     }
+
+    const { score, closureError, coverageDegrees, radialError, radiusFitError, circularityError } = scoreComponents;
 
     const guideCenterX = logicalSize.value / 2;
     const guideCenterY = logicalSize.value / 2;
@@ -119,38 +126,44 @@ export function useCircleGame() {
         label: ERROR_LABEL_TOO_SMALL(),
         radialError: 1,
         radiusFitError: 1,
+        circularityError: 1,
         closureError: 1,
         directionChangeError: 0,
         timeoutError: 0,
         centerFailureError: 0,
         guideSizeFailureError: 1,
         coverageFailureError: 0,
-        coverageDegrees: completionMetrics.coverageDegrees,
+        coverageDegrees,
       };
     }
 
-    if (completionMetrics.closureError > FINAL_CLOSURE_ERROR_THRESHOLD) {
+    if (closureError > FINAL_CLOSURE_ERROR_THRESHOLD) {
       incrementLabelRotation();
       return {
         score: 0,
         label: ERROR_LABEL_CLOSURE(),
         radialError: 1,
         radiusFitError: 1,
-        closureError: completionMetrics.closureError,
+        circularityError: 1,
+        closureError,
         directionChangeError: 0,
         timeoutError: 0,
         centerFailureError: 0,
         guideSizeFailureError: 0,
         coverageFailureError: 0,
-        coverageDegrees: completionMetrics.coverageDegrees,
+        coverageDegrees,
       };
     }
 
     if (ENABLE_SCORE_DEBUG) {
       console.debug('circle-score-live-final', {
         score,
-        completionMetrics,
-        note: 'final-score uses calculateLiveScore()',
+        radialError,
+        radiusFitError,
+        circularityError,
+        closureError,
+        coverageDegrees,
+        note: 'final-score uses calculateScoreComponents()',
       });
     }
 
@@ -159,15 +172,16 @@ export function useCircleGame() {
     return {
       score,
       label: getLabel(score),
-      radialError: 0,
-      radiusFitError: 0,
-      closureError: completionMetrics.closureError,
+      radialError,
+      radiusFitError,
+      circularityError,
+      closureError,
       directionChangeError: 0,
       timeoutError: 0,
       centerFailureError: 0,
       guideSizeFailureError: 0,
       coverageFailureError: 0,
-      coverageDegrees: completionMetrics.coverageDegrees,
+      coverageDegrees,
     };
   }
 
