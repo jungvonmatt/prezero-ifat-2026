@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      include: ['../shared/types/vue-html.d.ts', '../shared/types/global.d.ts'],
+      include: ['../shared/types/vue-html.d.ts', '../shared/types/global.d.ts', '../public/sw.ts'],
       compilerOptions: {
         types: ['./shared/types/global.d.ts'],
       },
